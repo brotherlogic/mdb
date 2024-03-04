@@ -1,0 +1,63 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: mdb
+  namespace: mdb
+  labels:
+    app: mdb
+spec:
+  type: NodePort
+  metadata:
+    labels:
+      app: mdb
+  ports:
+    - name: grpc
+      port: 8080
+      targetPort: 8080
+    - name: metrics
+      port: 8081
+      targetPort: 8081
+  selector:
+    app: mdb
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: mdb
+  namespace: monitoring
+  labels:
+    release: kube-prometheus-stack
+spec:
+  endpoints:
+    - port: metrics
+      path: /metrics
+      interval: 30s
+  namespaceSelector:
+    matchNames:
+      - mdb
+  selector:
+    matchLabels:
+      app: mdb
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mdb
+  namespace: mdb
+spec:
+  selector:
+    matchLabels:
+      app: mdb
+  replicas: 3
+  template:
+    metadata:
+      labels:
+        app: mdb
+    spec:
+      containers:
+        - name: mdb
+          image: registry.brotherlogic-backend.com/brotherlogic/mdb:0.601.0 # {"$imagepolicy": "flux-system:mdb"}
+          ports:
+            - containerPort: 8080
+      imagePullSecrets:
+        - name: regcred
