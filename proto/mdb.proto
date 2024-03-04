@@ -8,3 +8,15 @@ message Machine {
     fixed32 ipv4 = 1;
     string hostname = 2;
 }
+
+message ListMachinesRequest {
+    fixed32 ipv4 = 1;
+}
+
+message ListMachinesResponse {
+    repeated Machine machines = 1;
+}
+
+service MDBService {
+    rpc ListMachines(ListMachinesRequest) returns (ListMachinesResponse) {};
+}
