@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+package mdb;
+
+option go_package = "github.com/brotherlogic/mdb/proto";
+
+message Machine {
+    fixed32 ipv4 = 1;
+    string hostname = 2;
+}
