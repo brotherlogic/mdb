@@ -6,10 +6,30 @@ import (
 	"net"
 
 	pb "github.com/brotherlogic/mdb/proto"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 )
 
-func (s *Server) fillDB() {
-	toru := "192.168.86.22"
+var (
+	LOWER = 22
+	UPPER = 22
+
+	machinesFound = promauto.NewGauge(prometheus.GaugeOpts{
+		Name: "mdb_machine_count",
+	})
+)
+
+func (s *Server) FillDB() error {
+	for i := LOWER; i <= UPPER; i++ {
+		ipv4 := fmt.Sprintf("192.168.86.%v", i)
+		machine, err := s.lookupv4str(ipv4)
+		if err != nil {
+			return err
+		}
+
+		s.machines = append(s.machines, machine)
+	}
+	return nil
 }
 
 func ipv4ToString(ipv4 uint32) string {
@@ -18,14 +38,22 @@ func ipv4ToString(ipv4 uint32) string {
 	return ip.String()
 }
 
+func strToIpv4(ipv4 string) uint32 {
+	return binary.BigEndian.Uint32(net.ParseIP(ipv4))
+}
+
 func (s *Server) lookupv4(ipv4 uint32) (*pb.Machine, error) {
-	addr, err := net.LookupAddr(ipv4ToString(ipv4))
+	return s.lookupv4str(ipv4ToString(ipv4))
+}
+
+func (s *Server) lookupv4str(ipv4 string) (*pb.Machine, error) {
+	addr, err := net.LookupAddr(ipv4)
 	if err != nil {
 		return nil, fmt.Errorf("lookupaddr error: %v", err)
 	}
 
 	return &pb.Machine{
-		Ipv4:     ipv4,
+		Ipv4:     strToIpv4(ipv4),
 		Hostname: addr[0],
 	}, nil
 }

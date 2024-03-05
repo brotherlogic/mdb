@@ -34,7 +34,10 @@ func main() {
 	pb.RegisterMDBServiceServer(gs, s)
 
 	go func() {
-		s.fillDB()
+		err := s.FillDB()
+		if err != nil {
+			log.Fatalf("Error building machine database on init")
+		}
 	}()
 
 	err = gs.Serve(lis)
