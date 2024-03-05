@@ -33,6 +33,10 @@ func main() {
 	gs := grpc.NewServer()
 	pb.RegisterMDBServiceServer(gs, s)
 
+	go func() {
+		s.fillDB()
+	}()
+
 	err = gs.Serve(lis)
-	log.Errorf("gramophile is unable to serve http: %v", err)
+	log.Printf("gramophile is unable to serve http: %v", err)
 }
