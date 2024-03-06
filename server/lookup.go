@@ -12,8 +12,8 @@ import (
 )
 
 var (
-	LOWER = 22
-	UPPER = 22
+	LOWER = 1
+	UPPER = 256
 
 	machinesFound = promauto.NewGauge(prometheus.GaugeOpts{
 		Name: "mdb_machine_count",
@@ -30,10 +30,9 @@ func (s *Server) FillDB() error {
 		machine, err := s.lookupv4str(ipv4)
 		if err != nil {
 			lookupError.With(prometheus.Labels{"error": fmt.Sprintf("%v", err)}).Inc()
-			return err
+		} else {
+			s.machines = append(s.machines, machine)
 		}
-
-		s.machines = append(s.machines, machine)
 	}
 	return nil
 }
