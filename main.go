@@ -36,7 +36,7 @@ func main() {
 	go func() {
 		err := s.FillDB()
 		if err != nil {
-			log.Fatalf("error building machine database on init")
+			log.Fatalf("error building machine database on init: %v", err)
 		}
 	}()
 
