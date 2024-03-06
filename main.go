@@ -36,10 +36,10 @@ func main() {
 	go func() {
 		err := s.FillDB()
 		if err != nil {
-			log.Fatalf("Error building machine database on init")
+			log.Fatalf("error building machine database on init")
 		}
 	}()
 
 	err = gs.Serve(lis)
-	log.Printf("gramophile is unable to serve http: %v", err)
+	log.Printf("mdb is unable to serve http: %v", err)
 }
