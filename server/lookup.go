@@ -17,6 +17,10 @@ var (
 	machinesFound = promauto.NewGauge(prometheus.GaugeOpts{
 		Name: "mdb_machine_count",
 	})
+
+	lookupError = promauto.NewCounterVec(prometheus.CounterOpts{
+		Name: "mdb_lookup_error",
+	}, []string{"error"})
 )
 
 func (s *Server) FillDB() error {
@@ -24,6 +28,7 @@ func (s *Server) FillDB() error {
 		ipv4 := fmt.Sprintf("192.168.86.%v", i)
 		machine, err := s.lookupv4str(ipv4)
 		if err != nil {
+			lookupError.With(prometheus.Labels{"error": fmt.Sprintf("%v", err)}).Inc()
 			return err
 		}
 
