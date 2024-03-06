@@ -3,6 +3,7 @@ package server
 import (
 	"encoding/binary"
 	"fmt"
+	"log"
 	"net"
 
 	pb "github.com/brotherlogic/mdb/proto"
@@ -56,6 +57,8 @@ func (s *Server) lookupv4str(ipv4 string) (*pb.Machine, error) {
 	if err != nil {
 		return nil, fmt.Errorf("lookupaddr error: %v", err)
 	}
+
+	log.Printf("FOUND %v -> %v", ipv4, addr)
 
 	return &pb.Machine{
 		Ipv4:     strToIpv4(ipv4),
