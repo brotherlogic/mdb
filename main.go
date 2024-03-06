@@ -6,10 +6,12 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"net/http"
 
 	"google.golang.org/grpc"
 
 	"github.com/brotherlogic/mdb/server"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	pb "github.com/brotherlogic/mdb/proto"
 )
@@ -32,6 +34,12 @@ func main() {
 	}
 	gs := grpc.NewServer()
 	pb.RegisterMDBServiceServer(gs, s)
+
+	http.Handle("/metrics", promhttp.Handler())
+	go func() {
+		err := http.ListenAndServe(fmt.Sprintf(":%v", *metricsPort), nil)
+		log.Fatalf("mdb is unable to serve metrics: %v", err)
+	}()
 
 	go func() {
 		err := s.FillDB()
