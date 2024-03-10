@@ -35,6 +35,7 @@ func (s *Server) FillDB() error {
 		}
 	}
 
+	log.Printf("Setting machine count: %v", len(s.machines))
 	machinesFound.Set(float64(len(s.machines)))
 
 	return nil
