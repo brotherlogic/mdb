@@ -34,6 +34,9 @@ func (s *Server) FillDB() error {
 			s.machines = append(s.machines, machine)
 		}
 	}
+
+	machinesFound.Set(float64(len(s.machines)))
+
 	return nil
 }
 
