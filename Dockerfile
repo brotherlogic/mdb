@@ -19,25 +19,22 @@ COPY *.go ./
 
 RUN CGO_ENABLED=0 go build -o /mdb
 
+RUN apt update && apt install -y nmap
+
 ##
 ## Deploy
 ##
-FROM busybox:1.35.0-uclibc as busybox
 FROM gcr.io/distroless/base-debian11
 
 WORKDIR /
 
-# Now copy the static shell into base image.
-COPY --from=busybox /bin/sh /bin/sh
-COPY --from=busybox /usr/bin/apt /usr/bin/apt
 
 COPY --from=build /mdb /mdb
+COPY --from=build /usr/bin/nmap /nmap
 
 EXPOSE 8080
 EXPOSE 8081
 
 USER root:root
-
-RUN apt update && apt install -y nmap
 
 ENTRYPOINT ["/mdb"]
