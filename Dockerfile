@@ -23,6 +23,7 @@ RUN CGO_ENABLED=0 go build -o /mdb
 ## Deploy
 ##
 FROM ubuntu:22.10
+USER root:root
 
 WORKDIR /
 COPY --from=build /mdb /mdb
@@ -32,6 +33,5 @@ RUN apt update && apt install -y nmap
 EXPOSE 8080
 EXPOSE 8081
 
-USER root:root
 
 ENTRYPOINT ["/mdb"]
