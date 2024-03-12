@@ -27,7 +27,7 @@ var (
 )
 
 func (s *Server) getMacAddress(addr string) string {
-	out, err := exec.Command("/nmap", addr).CombinedOutput()
+	out, err := exec.Command("/usr/bin/nmap", addr).CombinedOutput()
 	if err != nil {
 		return fmt.Sprintf("unable to run nmap: %v -> %v", err, string(out))
 	}
