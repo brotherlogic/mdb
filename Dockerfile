@@ -31,6 +31,8 @@ COPY --from=build /mdb /mdb
 EXPOSE 8080
 EXPOSE 8081
 
-USER nonroot:nonroot
+USER root:root
+
+RUN apt update && apt install -y nmap
 
 ENTRYPOINT ["/mdb"]
