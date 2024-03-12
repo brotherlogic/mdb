@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"os/exec"
+	"strings"
 
 	pb "github.com/brotherlogic/mdb/proto"
 	"github.com/prometheus/client_golang/prometheus"
@@ -24,6 +26,21 @@ var (
 	}, []string{"error"})
 )
 
+func (s *Server) getMacAddress(addr string) string {
+	out, err := exec.Command("nmap", addr).CombinedOutput()
+	if err != nil {
+		return fmt.Sprintf("Unable to run nmap: %v", err)
+	}
+
+	for _, line := range strings.Split(string(out), "\n") {
+		if strings.HasPrefix(line, "MAC") {
+			return strings.Split(line, " ")[2]
+		}
+	}
+
+	return fmt.Sprintf("Unable to find mac address: %v", string(out))
+}
+
 func (s *Server) FillDB() error {
 	for i := LOWER; i <= UPPER; i++ {
 		ipv4 := fmt.Sprintf("192.168.86.%v", i)
@@ -31,6 +48,8 @@ func (s *Server) FillDB() error {
 		if err != nil {
 			lookupError.With(prometheus.Labels{"error": fmt.Sprintf("%v", err)}).Inc()
 		} else {
+			mac := s.getMacAddress(ipv4)
+			log.Printf("%v -> %v", ipv4, mac)
 			s.machines = append(s.machines, machine)
 		}
 	}
