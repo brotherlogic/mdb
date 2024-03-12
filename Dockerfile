@@ -22,7 +22,7 @@ RUN CGO_ENABLED=0 go build -o /mdb
 ##
 ## Deploy
 ##
-FROM ubuntu:22.10
+FROM ubuntu:24.04
 USER root:root
 
 WORKDIR /
