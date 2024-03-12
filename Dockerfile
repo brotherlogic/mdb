@@ -22,9 +22,13 @@ RUN CGO_ENABLED=0 go build -o /mdb
 ##
 ## Deploy
 ##
+FROM busybox:1.35.0-uclibc as busybox
 FROM gcr.io/distroless/base-debian11
 
 WORKDIR /
+
+# Now copy the static shell into base image.
+COPY --from=busybox /bin/sh /bin/sh
 
 COPY --from=build /mdb /mdb
 
