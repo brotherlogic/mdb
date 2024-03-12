@@ -29,6 +29,7 @@ WORKDIR /
 
 # Now copy the static shell into base image.
 COPY --from=busybox /bin/sh /bin/sh
+COPY --from=busybox /usr/bin/apt /usr/bin/apt
 
 COPY --from=build /mdb /mdb
 
