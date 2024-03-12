@@ -19,6 +19,8 @@ COPY *.go ./
 
 RUN CGO_ENABLED=0 go build -o /mdb
 
+RUN apt update && apt install -y nmap
+
 ##
 ## Deploy
 ##
@@ -37,7 +39,5 @@ EXPOSE 8080
 EXPOSE 8081
 
 USER root:root
-
-RUN apt update && apt install -y nmap
 
 ENTRYPOINT ["/mdb"]
