@@ -55,9 +55,9 @@ spec:
         app: mdb
     spec:
       securityContext:
-        - capabilities:
-            add: [“CAP_NET_RAW”]
-        - runAsUser: 1000
+        capabilities:
+          add: [“CAP_NET_RAW”]
+        runAsUser: 1000
       containers:
         - name: mdb
           image: registry.brotherlogic-backend.com/brotherlogic/mdb:0.26.0 # {"$imagepolicy": "flux-system:mdb"}
