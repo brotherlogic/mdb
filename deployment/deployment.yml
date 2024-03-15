@@ -56,7 +56,7 @@ spec:
     spec:
       securityContext:
         capabilities:
-          add: [“CAP_NET_RAW”, "NET_ADMIN"]
+          add: ["NET_ADMIN"]
         runAsUser: 0
         allowPrivilegeEscalation: false
       containers:
