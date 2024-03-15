@@ -54,6 +54,8 @@ spec:
       labels:
         app: mdb
     spec:
+      securityContext:
+        - add: [“CAP_NET_RAW”]
       containers:
         - name: mdb
           image: registry.brotherlogic-backend.com/brotherlogic/mdb:0.22.0 # {"$imagepolicy": "flux-system:mdb"}

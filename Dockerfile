@@ -29,7 +29,6 @@ WORKDIR /
 COPY --from=build /mdb /mdb
 
 RUN apt update && apt install -y nmap
-RUN setcap cap_net_raw+eip $(which nmap)
 
 EXPOSE 8080
 EXPOSE 8081
