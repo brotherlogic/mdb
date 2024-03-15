@@ -58,7 +58,7 @@ spec:
         - add: [“CAP_NET_RAW”]
       containers:
         - name: mdb
-          image: registry.brotherlogic-backend.com/brotherlogic/mdb:0.22.0 # {"$imagepolicy": "flux-system:mdb"}
+          image: registry.brotherlogic-backend.com/brotherlogic/mdb:0.25.0 # {"$imagepolicy": "flux-system:mdb"}
           ports:
             - containerPort: 8080
       imagePullSecrets:
