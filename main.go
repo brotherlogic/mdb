@@ -30,7 +30,7 @@ func main() {
 
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", *port))
 	if err != nil {
-		log.Fatalf("mdb is unable to listen on the grpc port %v: %v", *port, err)
+		log.Fatalf("mdb is actually unable to listen on the grpc port %v: %v", *port, err)
 	}
 	gs := grpc.NewServer()
 	pb.RegisterMDBServiceServer(gs, s)
