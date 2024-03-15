@@ -55,7 +55,8 @@ spec:
         app: mdb
     spec:
       securityContext:
-        - add: [“CAP_NET_RAW”]
+        - capabilities:
+            add: [“CAP_NET_RAW”]
         - runAsUser: 1000
       containers:
         - name: mdb
