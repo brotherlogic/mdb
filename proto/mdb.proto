@@ -7,6 +7,8 @@ option go_package = "github.com/brotherlogic/mdb/proto";
 message Machine {
     fixed32 ipv4 = 1;
     string hostname = 2;
+    string mac = 3;
+    string controller = 4;
 }
 
 message ListMachinesRequest {

@@ -26,19 +26,19 @@ var (
 	}, []string{"error"})
 )
 
-func (s *Server) getMacAddress(addr string) string {
+func (s *Server) getMacAddress(addr string) (string, string) {
 	out, err := exec.Command("/usr/bin/nmap", addr).CombinedOutput()
 	if err != nil {
-		return fmt.Sprintf("unable to nmap: %v -> %v", err, string(out))
+		return fmt.Sprintf("unable to nmap: %v -> %v", err, string(out)), ""
 	}
 
 	for _, line := range strings.Split(string(out), "\n") {
 		if strings.HasPrefix(line, "MAC") {
-			return strings.Split(line, " ")[2]
+			return strings.Split(line, " ")[2], strings.Join(strings.Split(line, " ")[3:], " ")
 		}
 	}
 
-	return fmt.Sprintf("Unable to find mac address: %v", string(out))
+	return fmt.Sprintf("Unable to find mac address: %v", string(out)), ""
 }
 
 func (s *Server) FillDB() error {
@@ -48,8 +48,10 @@ func (s *Server) FillDB() error {
 		if err != nil {
 			lookupError.With(prometheus.Labels{"error": fmt.Sprintf("%v", err)}).Inc()
 		} else {
-			mac := s.getMacAddress(ipv4)
-			log.Printf("%v -> %v", ipv4, mac)
+			mac, thing := s.getMacAddress(ipv4)
+			log.Printf("%v -> %v, %v", ipv4, mac, thing)
+			machine.Mac = mac
+			machine.Controller = thing
 			s.machines = append(s.machines, machine)
 		}
 	}
