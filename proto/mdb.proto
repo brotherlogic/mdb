@@ -4,11 +4,30 @@ package mdb;
 
 option go_package = "github.com/brotherlogic/mdb/proto";
 
+message Config {
+    Machine current_machine = 1;
+    int32 issue_id = 2;
+}
+
+enum MachineType {
+    MACHINE_TYPE_UNKNOWN = 0;
+    MACHINE_TYPE_RASPBERRY_PI = 1;
+    MACHINE_TYPE_IOT_DEVICE = 2;
+}
+
+message Mdb {
+    repeated Machine machines = 1;
+    Config config = 2;
+}
+
 message Machine {
     fixed32 ipv4 = 1;
     string hostname = 2;
     string mac = 3;
     string controller = 4;
+
+    // These are the user specified eleemnts
+    MachineType type = 5;
 }
 
 message ListMachinesRequest {

@@ -7,6 +7,7 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"time"
 
 	"google.golang.org/grpc"
 
@@ -42,7 +43,10 @@ func main() {
 	}()
 
 	go func() {
-		err := s.FillDB()
+		ctx, cancel := context.WithTimeout(context.Background(), time.Hour)
+		defer cancel()
+
+		err := s.FillDB(ctx)
 		if err != nil {
 			log.Fatalf("error building machine database on init: %v", err)
 		}

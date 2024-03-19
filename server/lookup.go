@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"encoding/binary"
 	"fmt"
 	"log"
@@ -8,7 +9,9 @@ import (
 	"os/exec"
 	"strings"
 
+	ghbpb "github.com/brotherlogic/githubridge/proto"
 	pb "github.com/brotherlogic/mdb/proto"
+
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 )
@@ -41,7 +44,89 @@ func (s *Server) getMacAddress(addr string) (string, string) {
 	return fmt.Sprintf("Unable to find mac address: %v", string(out)), ""
 }
 
-func (s *Server) FillDB() error {
+func mergeInto(machines []*pb.Machine, machine *pb.Machine) []*pb.Machine {
+	for _, exMachine := range machines {
+		if exMachine.Controller == machine.Controller && exMachine.Hostname == machine.Hostname {
+			exMachine.Ipv4 = machine.Ipv4
+			exMachine.Mac = machine.Mac
+			return machines
+		}
+	}
+
+	return append(machines, machine)
+}
+
+func (s *Server) validateMachine(ctx context.Context, mdb *pb.Mdb, machine *pb.Machine) error {
+	issue, err := s.ghbclient.CreateIssue(ctx, &ghbpb.CreateIssueRequest{
+		User:  "brotherlogic",
+		Repo:  "mdb",
+		Title: "Missing data in MDB",
+		Body:  fmt.Sprintf("%v is missing data", machine),
+	})
+	if err != nil {
+		return err
+	}
+	mdb.GetConfig().CurrentMachine = machine
+	mdb.GetConfig().IssueId = int32(issue.GetIssueId())
+}
+
+func (s *Server) validateMachines(ctx context.Context, mdb *pb.Mdb) error {
+	for _, machine := range mdb.GetMachines() {
+		if machine.GetType() == pb.MachineType_MACHINE_TYPE_UNKNOWN {
+			return s.validateMachine(ctx, mdb, machine)
+		}
+	}
+
+	return nil
+}
+
+func (s *Server) checkIssue(ctx context.Context, mdb *pb.Mdb) error {
+	labels, err := s.ghbclient.GetLabels(ctx, &ghbpb.GetIssueRequest{
+		User: "brotherlogic",
+		Repo: "mdb",
+		Id:   mdb.GetConfig().GetIssueId(),
+	})
+	if err != nil {
+		return err
+	}
+
+	for _, label := range labels {
+		if label.GetName() == "raspberrypi" {
+			mdb.GetConfig().GetCurrentMachine().Type = pb.MachineType_MACHINE_TYPE_RASPBERRY_PI
+		}
+	}
+
+	//Resolve the machine
+	return s.resolveMachine(ctx, mdb)
+}
+
+func (s *Server) resolveMachine(ctx context.Context, mdb *pb.Mdb) error {
+	if mdb.GetConfig().GetCurrentMachine().GetType() == pb.MachineType_MACHINE_TYPE_UNKNOWN {
+		return nil
+	}
+
+	for _, machine := range mdb.GetMachines() {
+		if machine.GetController() == mdb.GetConfig().GetCurrentMachine().GetController() && machine.GetHostname() == mdb.GetConfig().GetCurrentMachine().GetHostname() {
+			machine.Type = mdb.GetConfig().GetCurrentMachine().GetType()
+			return nil
+		}
+	}
+
+	mdb.Machines = append(mdb.Machines, mdb.GetConfig().GetCurrentMachine())
+	return nil
+}
+
+func (s *Server) FillDB(ctx context.Context) error {
+	mdb, err := s.loadConfig(ctx)
+	if err != nil {
+		return err
+	}
+
+	// Don't run a fill if we're working on a machine
+	if mdb.GetConfig().GetIssueId() != 0 {
+		return s.checkIssue(ctx, mdb)
+	}
+
 	for i := LOWER; i <= UPPER; i++ {
 		ipv4 := fmt.Sprintf("192.168.86.%v", i)
 		machine, err := s.lookupv4str(ipv4)
@@ -52,12 +137,14 @@ func (s *Server) FillDB() error {
 			log.Printf("%v -> %v, %v", ipv4, mac, thing)
 			machine.Mac = mac
 			machine.Controller = thing
-			s.machines = append(s.machines, machine)
+			mdb.Machines = mergeInto(mdb.Machines, machine)
 		}
 	}
 
-	log.Printf("Setting machine count: %v", len(s.machines))
-	machinesFound.Set(float64(len(s.machines)))
+	log.Printf("Setting machine count: %v", len(mdb.Machines))
+	machinesFound.Set(float64(len(mdb.Machines)))
+
+	s.validateMachines(ctx, mdb)
 
 	return nil
 }
