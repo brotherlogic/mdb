@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"log"
+	"os"
 
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
@@ -15,7 +16,8 @@ import (
 )
 
 const (
-	MDB_PATH = "github.com/brotherlogic/mdb"
+	MDB_PATH     = "github.com/brotherlogic/mdb"
+	GHB_PASSWORD = "ghbridge_password"
 )
 
 type Server struct {
@@ -58,7 +60,7 @@ func (s *Server) ListMachines(ctx context.Context, req *pb.ListMachinesRequest) 
 }
 
 func NewServer(ctx context.Context) *Server {
-	ghbclient, err := ghbclient.GetClientInternal()
+	ghbclient, err := ghbclient.GetClientInternal(os.Getenv(GHB_PASSWORD))
 	if err != nil {
 		log.Fatalf("Bad client get: %v", err)
 	}

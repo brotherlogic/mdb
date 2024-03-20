@@ -68,6 +68,8 @@ func (s *Server) validateMachine(ctx context.Context, mdb *pb.Mdb, machine *pb.M
 	}
 	mdb.GetConfig().CurrentMachine = machine
 	mdb.GetConfig().IssueId = int32(issue.GetIssueId())
+
+	return nil
 }
 
 func (s *Server) validateMachines(ctx context.Context, mdb *pb.Mdb) error {
@@ -81,7 +83,7 @@ func (s *Server) validateMachines(ctx context.Context, mdb *pb.Mdb) error {
 }
 
 func (s *Server) checkIssue(ctx context.Context, mdb *pb.Mdb) error {
-	labels, err := s.ghbclient.GetLabels(ctx, &ghbpb.GetIssueRequest{
+	labels, err := s.ghbclient.GetLabels(ctx, &ghbpb.GetLabelsRequest{
 		User: "brotherlogic",
 		Repo: "mdb",
 		Id:   mdb.GetConfig().GetIssueId(),
@@ -90,8 +92,8 @@ func (s *Server) checkIssue(ctx context.Context, mdb *pb.Mdb) error {
 		return err
 	}
 
-	for _, label := range labels {
-		if label.GetName() == "raspberrypi" {
+	for _, label := range labels.GetLabels() {
+		if label == "raspberrypi" {
 			mdb.GetConfig().GetCurrentMachine().Type = pb.MachineType_MACHINE_TYPE_RASPBERRY_PI
 		}
 	}
