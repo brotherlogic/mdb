@@ -65,5 +65,11 @@ spec:
           image: registry.brotherlogic-backend.com/brotherlogic/mdb:0.29.0 # {"$imagepolicy": "flux-system:mdb"}
           ports:
             - containerPort: 8080
+           env:
+            - name: GHBRIDGE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: ghb
+                  key: ghb_password
       imagePullSecrets:
         - name: regcred
