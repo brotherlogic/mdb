@@ -27,6 +27,10 @@ var (
 	lookupError = promauto.NewCounterVec(prometheus.CounterOpts{
 		Name: "mdb_lookup_error",
 	}, []string{"error"})
+
+	validationError = promauto.NewCounterVec(prometheus.CounterOpts{
+		Name: "mdb_validate_error",
+	}, []string{"error"})
 )
 
 func (s *Server) getMacAddress(addr string) (string, string) {
@@ -75,7 +79,9 @@ func (s *Server) validateMachine(ctx context.Context, mdb *pb.Mdb, machine *pb.M
 func (s *Server) validateMachines(ctx context.Context, mdb *pb.Mdb) error {
 	for _, machine := range mdb.GetMachines() {
 		if machine.GetType() == pb.MachineType_MACHINE_TYPE_UNKNOWN {
-			return s.validateMachine(ctx, mdb, machine)
+			err := s.validateMachine(ctx, mdb, machine)
+			validationError.With(prometheus.Labels{"error": fmt.Sprintf("%v", err)})
+			return err
 		}
 	}
 
