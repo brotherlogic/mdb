@@ -9,10 +9,9 @@ import (
 	"net/http"
 	"time"
 
-	"google.golang.org/grpc"
-
 	"github.com/brotherlogic/mdb/server"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"google.golang.org/grpc"
 
 	pb "github.com/brotherlogic/mdb/proto"
 )
@@ -46,7 +45,7 @@ func main() {
 		ctx, cancel := context.WithTimeout(context.Background(), time.Hour)
 		defer cancel()
 
-		err := s.FillDB(ctx)
+		err := s.RefillDatabase(ctx)
 		if err != nil {
 			log.Fatalf("error building machine database on init: %v", err)
 		}

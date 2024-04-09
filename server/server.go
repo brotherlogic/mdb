@@ -2,15 +2,20 @@ package server
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"os"
 
+	lookup "github.com/brotherlogic/mdb/lookup"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 
 	ghbclient "github.com/brotherlogic/githubridge/client"
 	rsclient "github.com/brotherlogic/rstore/client"
 
+	ghbpb "github.com/brotherlogic/githubridge/proto"
 	pb "github.com/brotherlogic/mdb/proto"
 	rspb "github.com/brotherlogic/rstore/proto"
 )
@@ -20,9 +25,28 @@ const (
 	GHB_PASSWORD = "ghbridge_password"
 )
 
+var (
+	validationError = promauto.NewCounterVec(prometheus.CounterOpts{
+		Name: "mdb_validate_error",
+	}, []string{"error"})
+)
+
 type Server struct {
 	ghbclient ghbclient.GithubridgeClient
 	rsclient  rsclient.RStoreClient
+}
+
+func (s *Server) RefillDatabase(ctx context.Context) error {
+	config, err := s.loadConfig(ctx)
+	if err != nil {
+		return err
+	}
+
+	err = lookup.FillDB(ctx, config)
+	if err != nil {
+		return err
+	}
+	return s.saveConfig(ctx, config)
 }
 
 func (s *Server) loadConfig(ctx context.Context) (*pb.Mdb, error) {
@@ -69,4 +93,68 @@ func NewServer(ctx context.Context) *Server {
 		log.Fatalf("Unable to get rstore client: %v", err)
 	}
 	return &Server{ghbclient: ghbclient, rsclient: rsclient}
+}
+
+func (s *Server) validateMachine(ctx context.Context, mdb *pb.Mdb, machine *pb.Machine) error {
+	issue, err := s.ghbclient.CreateIssue(ctx, &ghbpb.CreateIssueRequest{
+		User:  "brotherlogic",
+		Repo:  "mdb",
+		Title: "Missing data in MDB",
+		Body:  fmt.Sprintf("%v is missing data", machine),
+	})
+	if err != nil {
+		return err
+	}
+	mdb.GetConfig().CurrentMachine = machine
+	mdb.GetConfig().IssueId = int32(issue.GetIssueId())
+
+	return nil
+}
+
+func (s *Server) validateMachines(ctx context.Context, mdb *pb.Mdb) error {
+	for _, machine := range mdb.GetMachines() {
+		if machine.GetType() == pb.MachineType_MACHINE_TYPE_UNKNOWN {
+			err := s.validateMachine(ctx, mdb, machine)
+			validationError.With(prometheus.Labels{"error": fmt.Sprintf("%v", err)})
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (s *Server) checkIssue(ctx context.Context, mdb *pb.Mdb) error {
+	labels, err := s.ghbclient.GetLabels(ctx, &ghbpb.GetLabelsRequest{
+		User: "brotherlogic",
+		Repo: "mdb",
+		Id:   mdb.GetConfig().GetIssueId(),
+	})
+	if err != nil {
+		return err
+	}
+
+	for _, label := range labels.GetLabels() {
+		if label == "raspberrypi" {
+			mdb.GetConfig().GetCurrentMachine().Type = pb.MachineType_MACHINE_TYPE_RASPBERRY_PI
+		}
+	}
+
+	//Resolve the machine
+	return s.resolveMachine(ctx, mdb)
+}
+
+func (s *Server) resolveMachine(ctx context.Context, mdb *pb.Mdb) error {
+	if mdb.GetConfig().GetCurrentMachine().GetType() == pb.MachineType_MACHINE_TYPE_UNKNOWN {
+		return nil
+	}
+
+	for _, machine := range mdb.GetMachines() {
+		if machine.GetController() == mdb.GetConfig().GetCurrentMachine().GetController() && machine.GetHostname() == mdb.GetConfig().GetCurrentMachine().GetHostname() {
+			machine.Type = mdb.GetConfig().GetCurrentMachine().GetType()
+			return nil
+		}
+	}
+
+	mdb.Machines = append(mdb.Machines, mdb.GetConfig().GetCurrentMachine())
+	return nil
 }
