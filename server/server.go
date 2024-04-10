@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"time"
 
 	lookup "github.com/brotherlogic/mdb/lookup"
 	"github.com/prometheus/client_golang/prometheus"
@@ -25,20 +26,41 @@ import (
 const (
 	MDB_PATH     = "github.com/brotherlogic/mdb"
 	GHB_PASSWORD = "ghbridge_password"
+
+	REFILL_FREQUENCY = time.Hour
 )
 
 var (
 	validationError = promauto.NewCounterVec(prometheus.CounterOpts{
 		Name: "mdb_validate_error",
 	}, []string{"error"})
+	refillError = promauto.NewCounterVec(prometheus.CounterOpts{
+		Name: "mdb_refill_error",
+	}, []string{"error"})
 )
 
 type Server struct {
 	ghbclient ghbclient.GithubridgeClient
 	rsclient  rsclient.RStoreClient
+	running   bool
 }
 
-func (s *Server) RefillDatabase(ctx context.Context) error {
+func (s *Server) RunRefillLoop() {
+	for s.running {
+		ctx, cancel := context.WithTimeout(context.Background(), time.Hour)
+		defer cancel()
+
+		err := s.refillDatabase(ctx)
+		if err != nil {
+			refillError.With(prometheus.Labels{"error": fmt.Sprintf("%v", err)})
+			log.Fatalf("error building machine database on init: %v", err)
+		}
+
+		time.Sleep(REFILL_FREQUENCY)
+	}
+}
+
+func (s *Server) refillDatabase(ctx context.Context) error {
 	config, err := s.loadConfig(ctx)
 	if err != nil {
 		return err
