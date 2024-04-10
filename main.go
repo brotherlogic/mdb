@@ -7,7 +7,6 @@ import (
 	"log"
 	"net"
 	"net/http"
-	"time"
 
 	"github.com/brotherlogic/mdb/server"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -41,14 +40,9 @@ func main() {
 		log.Fatalf("mdb is unable to serve metrics: %v", err)
 	}()
 
+	// Background run the refill loop
 	go func() {
-		ctx, cancel := context.WithTimeout(context.Background(), time.Hour)
-		defer cancel()
-
-		err := s.RefillDatabase(ctx)
-		if err != nil {
-			log.Fatalf("error building machine database on init: %v", err)
-		}
+		s.RunRefillLoop()
 	}()
 
 	err = gs.Serve(lis)

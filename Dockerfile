@@ -11,7 +11,9 @@ RUN mkdir proto
 COPY proto/*.go ./proto/
 
 RUN mkdir server
+RUN mkdir lookup
 COPY server/*.go ./server/
+COPY lookup/*.go ./lookup
 
 RUN go mod download
 
