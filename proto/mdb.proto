@@ -43,6 +43,17 @@ message ListMachinesResponse {
     repeated Machine machines = 1;
 }
 
+message UpdateMachineRequest {
+    string hostname = 1;
+
+    MachineType new_type = 2;
+}
+
+message UpdateMachineResponse {
+
+}
+
 service MDBService {
     rpc ListMachines(ListMachinesRequest) returns (ListMachinesResponse) {};
+    rpc UpdateMachine(UpdateMachineRequest) returns (UpdateMachineResponse) {};
 }

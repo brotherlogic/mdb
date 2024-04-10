@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"os"
 	"time"
 
 	lookup "github.com/brotherlogic/mdb/lookup"
@@ -108,7 +107,7 @@ func (s *Server) ListMachines(ctx context.Context, req *pb.ListMachinesRequest) 
 }
 
 func NewServer(ctx context.Context) *Server {
-	ghbclient, err := ghbclient.GetClientInternal(os.Getenv(GHB_PASSWORD))
+	ghbclient, err := ghbclient.GetClientInternal()
 	if err != nil {
 		log.Fatalf("Bad client get: %v", err)
 	}
@@ -198,4 +197,29 @@ func (s *Server) resolveMachine(ctx context.Context, mdb *pb.Mdb) error {
 
 	mdb.Machines = append(mdb.Machines, mdb.GetConfig().GetCurrentMachine())
 	return nil
+}
+
+func (s *Server) UpdateMachine(ctx context.Context, req *pb.UpdateMachineRequest) (*pb.UpdateMachineResponse, error) {
+	config, err := s.loadConfig(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, machine := range config.GetMachines() {
+		if machine.GetHostname() == req.GetHostname() {
+			updated := false
+			if req.GetNewType() != pb.MachineType_MACHINE_TYPE_UNKNOWN {
+				machine.Type = req.GetNewType()
+				updated = true
+			}
+
+			if updated {
+				return &pb.UpdateMachineResponse{}, s.saveConfig(ctx, config)
+			}
+
+			return nil, status.Errorf(codes.FailedPrecondition, "No update was specified: %v", req)
+		}
+	}
+
+	return nil, status.Errorf(codes.NotFound, "machine %v was not found", req.GetHostname())
 }
