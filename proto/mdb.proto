@@ -15,6 +15,11 @@ enum MachineType {
     MACHINE_TYPE_IOT_DEVICE = 2;
 }
 
+enum MachineErrors {
+    MACHINE_ERROR_NONE = 0;
+    MACHINE_ERROR_MISSING_TYPE = 1;
+}
+
 message Mdb {
     repeated Machine machines = 1;
     Config config = 2;

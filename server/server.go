@@ -9,6 +9,8 @@ import (
 	lookup "github.com/brotherlogic/mdb/lookup"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 
@@ -95,12 +97,20 @@ func NewServer(ctx context.Context) *Server {
 	return &Server{ghbclient: ghbclient, rsclient: rsclient}
 }
 
-func (s *Server) validateMachine(ctx context.Context, mdb *pb.Mdb, machine *pb.Machine) error {
+func (s *Server) raiseIssue(ctx context.Context, mdb *pb.Mdb, machine *pb.Machine, verr pb.MachineErrors) error {
+	body := ""
+	switch verr {
+	case pb.MachineErrors_MACHINE_ERROR_MISSING_TYPE:
+		body = fmt.Sprintf("%v is missing the machine type", machine.GetHostname())
+	case pb.MachineErrors_MACHINE_ERROR_NONE:
+		return status.Errorf(codes.Internal, "Trying to raise issue for unbroken machine")
+	}
+
 	issue, err := s.ghbclient.CreateIssue(ctx, &ghbpb.CreateIssueRequest{
 		User:  "brotherlogic",
 		Repo:  "mdb",
 		Title: "Missing data in MDB",
-		Body:  fmt.Sprintf("%v is missing data", machine),
+		Body:  body,
 	})
 	if err != nil {
 		return err
@@ -111,10 +121,19 @@ func (s *Server) validateMachine(ctx context.Context, mdb *pb.Mdb, machine *pb.M
 	return nil
 }
 
+func (s *Server) dataMissing(ctx context.Context, machine *pb.Machine) pb.MachineErrors {
+	if machine.GetType() == pb.MachineType_MACHINE_TYPE_UNKNOWN {
+		return pb.MachineErrors_MACHINE_ERROR_MISSING_TYPE
+	}
+
+	return pb.MachineErrors_MACHINE_ERROR_NONE
+}
+
 func (s *Server) validateMachines(ctx context.Context, mdb *pb.Mdb) error {
 	for _, machine := range mdb.GetMachines() {
-		if machine.GetType() == pb.MachineType_MACHINE_TYPE_UNKNOWN {
-			err := s.validateMachine(ctx, mdb, machine)
+		valid := s.dataMissing(ctx, machine)
+		if valid != pb.MachineErrors_MACHINE_ERROR_NONE {
+			err := s.raiseIssue(ctx, mdb, machine, valid)
 			validationError.With(prometheus.Labels{"error": fmt.Sprintf("%v", err)})
 			return err
 		}
