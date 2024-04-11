@@ -53,7 +53,7 @@ func NewServer(ctx context.Context) *Server {
 	if err != nil {
 		log.Fatalf("Unable to get rstore client: %v", err)
 	}
-	return &Server{ghbclient: ghbclient, rsclient: rsclient}
+	return &Server{ghbclient: ghbclient, rsclient: rsclient, running: true}
 }
 
 func (s *Server) RunRefillLoop() {
