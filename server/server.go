@@ -62,12 +62,12 @@ func (s *Server) RunRefillLoop() {
 func (s *Server) refillDatabase(ctx context.Context) error {
 	config, err := s.loadConfig(ctx)
 	if err != nil {
-		return err
+		return fmt.Errorf("unable to load config: %w", err)
 	}
 
 	err = lookup.FillDB(ctx, config)
 	if err != nil {
-		return err
+		return fmt.Errorf("unable to fill db: %w", err)
 	}
 	return s.saveConfig(ctx, config)
 }
