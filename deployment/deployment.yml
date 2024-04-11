@@ -54,7 +54,8 @@ spec:
       labels:
         app: mdb
     spec:
-      #hostNetwork: true
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
       securityContext:
         capabilities:
           add: ["NET_ADMIN"]
