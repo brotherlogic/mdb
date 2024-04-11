@@ -44,6 +44,18 @@ type Server struct {
 	running   bool
 }
 
+func NewServer(ctx context.Context) *Server {
+	ghbclient, err := ghbclient.GetClientInternal()
+	if err != nil {
+		log.Fatalf("Bad client get: %v", err)
+	}
+	rsclient, err := rsclient.GetClient()
+	if err != nil {
+		log.Fatalf("Unable to get rstore client: %v", err)
+	}
+	return &Server{ghbclient: ghbclient, rsclient: rsclient}
+}
+
 func (s *Server) RunRefillLoop() {
 	for s.running {
 		ctx, cancel := context.WithTimeout(context.Background(), time.Hour)
@@ -104,18 +116,6 @@ func (s *Server) ListMachines(ctx context.Context, req *pb.ListMachinesRequest) 
 	}
 
 	return &pb.ListMachinesResponse{Machines: config.GetMachines()}, nil
-}
-
-func NewServer(ctx context.Context) *Server {
-	ghbclient, err := ghbclient.GetClientInternal()
-	if err != nil {
-		log.Fatalf("Bad client get: %v", err)
-	}
-	rsclient, err := rsclient.GetClient()
-	if err != nil {
-		log.Fatalf("Unable to get rstore client: %v", err)
-	}
-	return &Server{ghbclient: ghbclient, rsclient: rsclient}
 }
 
 func (s *Server) raiseIssue(ctx context.Context, mdb *pb.Mdb, machine *pb.Machine, verr pb.MachineErrors) error {
