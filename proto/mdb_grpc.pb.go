@@ -19,7 +19,8 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	MDBService_ListMachines_FullMethodName = "/mdb.MDBService/ListMachines"
+	MDBService_ListMachines_FullMethodName  = "/mdb.MDBService/ListMachines"
+	MDBService_UpdateMachine_FullMethodName = "/mdb.MDBService/UpdateMachine"
 )
 
 // MDBServiceClient is the client API for MDBService service.
@@ -27,6 +28,7 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type MDBServiceClient interface {
 	ListMachines(ctx context.Context, in *ListMachinesRequest, opts ...grpc.CallOption) (*ListMachinesResponse, error)
+	UpdateMachine(ctx context.Context, in *UpdateMachineRequest, opts ...grpc.CallOption) (*UpdateMachineResponse, error)
 }
 
 type mDBServiceClient struct {
@@ -46,11 +48,21 @@ func (c *mDBServiceClient) ListMachines(ctx context.Context, in *ListMachinesReq
 	return out, nil
 }
 
+func (c *mDBServiceClient) UpdateMachine(ctx context.Context, in *UpdateMachineRequest, opts ...grpc.CallOption) (*UpdateMachineResponse, error) {
+	out := new(UpdateMachineResponse)
+	err := c.cc.Invoke(ctx, MDBService_UpdateMachine_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MDBServiceServer is the server API for MDBService service.
 // All implementations should embed UnimplementedMDBServiceServer
 // for forward compatibility
 type MDBServiceServer interface {
 	ListMachines(context.Context, *ListMachinesRequest) (*ListMachinesResponse, error)
+	UpdateMachine(context.Context, *UpdateMachineRequest) (*UpdateMachineResponse, error)
 }
 
 // UnimplementedMDBServiceServer should be embedded to have forward compatible implementations.
@@ -59,6 +71,9 @@ type UnimplementedMDBServiceServer struct {
 
 func (UnimplementedMDBServiceServer) ListMachines(context.Context, *ListMachinesRequest) (*ListMachinesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListMachines not implemented")
+}
+func (UnimplementedMDBServiceServer) UpdateMachine(context.Context, *UpdateMachineRequest) (*UpdateMachineResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateMachine not implemented")
 }
 
 // UnsafeMDBServiceServer may be embedded to opt out of forward compatibility for this service.
@@ -90,6 +105,24 @@ func _MDBService_ListMachines_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _MDBService_UpdateMachine_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateMachineRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MDBServiceServer).UpdateMachine(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: MDBService_UpdateMachine_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MDBServiceServer).UpdateMachine(ctx, req.(*UpdateMachineRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // MDBService_ServiceDesc is the grpc.ServiceDesc for MDBService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -100,6 +133,10 @@ var MDBService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListMachines",
 			Handler:    _MDBService_ListMachines_Handler,
+		},
+		{
+			MethodName: "UpdateMachine",
+			Handler:    _MDBService_UpdateMachine_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
