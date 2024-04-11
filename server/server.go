@@ -79,7 +79,7 @@ func (s *Server) refillDatabase(ctx context.Context) error {
 
 	err = lookup.FillDB(ctx, config)
 	if err != nil {
-		return fmt.Errorf("unable to fill db: %w", err)
+		return fmt.Errorf("unable to fill the db: %w", err)
 	}
 	return s.saveConfig(ctx, config)
 }
