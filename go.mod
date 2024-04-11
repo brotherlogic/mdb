@@ -6,7 +6,7 @@ toolchain go1.22.1
 
 require (
 	github.com/brotherlogic/githubridge v0.2778.0
-	github.com/brotherlogic/rstore v0.45.0
+	github.com/brotherlogic/rstore v0.46.0
 	github.com/prometheus/client_golang v1.19.0
 	google.golang.org/grpc v1.63.2
 	google.golang.org/protobuf v1.33.0
