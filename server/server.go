@@ -89,6 +89,9 @@ func (s *Server) loadConfig(ctx context.Context) (*pb.Mdb, error) {
 		Key: MDB_PATH,
 	})
 	if err != nil {
+		if status.Code(err) == codes.NotFound {
+			return &pb.Mdb{}, nil
+		}
 		return nil, err
 	}
 
