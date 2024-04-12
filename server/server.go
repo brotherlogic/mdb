@@ -81,6 +81,14 @@ func (s *Server) refillDatabase(ctx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("unable to fill the db: %w", err)
 	}
+
+	// Validate machines if we need to
+	if config.GetConfig().GetIssueId() == 0 {
+		s.validateMachines(ctx, config)
+	} else {
+		s.checkIssue(ctx, config)
+	}
+
 	return s.saveConfig(ctx, config)
 }
 
@@ -198,7 +206,6 @@ func (s *Server) resolveMachine(ctx context.Context, mdb *pb.Mdb) error {
 		}
 	}
 
-	mdb.Machines = append(mdb.Machines, mdb.GetConfig().GetCurrentMachine())
 	return nil
 }
 
