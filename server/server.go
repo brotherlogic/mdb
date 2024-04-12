@@ -187,6 +187,8 @@ func (s *Server) checkIssue(ctx context.Context, mdb *pb.Mdb) error {
 	for _, label := range labels.GetLabels() {
 		if label == "raspberrypi" {
 			mdb.GetConfig().GetCurrentMachine().Type = pb.MachineType_MACHINE_TYPE_RASPBERRY_PI
+		} else {
+			log.Printf("Skipping label %v on %v", label, mdb.GetConfig().GetCurrentMachine())
 		}
 	}
 
