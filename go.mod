@@ -5,7 +5,7 @@ go 1.22
 toolchain go1.22.1
 
 require (
-	github.com/brotherlogic/githubridge v0.2778.0
+	github.com/brotherlogic/githubridge v0.2779.0
 	github.com/brotherlogic/rstore v0.46.0
 	github.com/prometheus/client_golang v1.19.0
 	google.golang.org/grpc v1.63.2
@@ -22,5 +22,5 @@ require (
 	golang.org/x/net v0.24.0 // indirect
 	golang.org/x/sys v0.19.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20240401170217-c3f982113cda // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20240412170617-26222e5d3d56 // indirect
 )
