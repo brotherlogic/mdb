@@ -147,6 +147,11 @@ func (s *Server) raiseIssue(ctx context.Context, mdb *pb.Mdb, machine *pb.Machin
 	if err != nil {
 		return err
 	}
+
+	if mdb.GetConfig() == nil {
+		mdb.Config = &pb.Config{}
+	}
+
 	mdb.GetConfig().CurrentMachine = machine
 	mdb.GetConfig().IssueId = int32(issue.GetIssueId())
 
