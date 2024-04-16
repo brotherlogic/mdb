@@ -221,6 +221,7 @@ func (s *Server) resolveMachine(ctx context.Context, mdb *pb.Mdb) error {
 				Repo:  "mdb",
 				Id: int64(mdb.GetConfig().GetIssueId()),
 			})
+			log.Printf("Resolved machine and closed issue: %v", err)
 			if err == nil {
 				mdb.GetConfig().CurrentMachine = nil
 				mdb.GetConfig().IssueId = 0
