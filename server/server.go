@@ -162,15 +162,18 @@ func (s *Server) dataMissing(ctx context.Context, machine *pb.Machine) pb.Machin
 }
 
 func (s *Server) validateMachines(ctx context.Context, mdb *pb.Mdb) error {
+	log.Printf("Validating Machines")
 	for _, machine := range mdb.GetMachines() {
 		valid := s.dataMissing(ctx, machine)
 		if valid != pb.MachineErrors_MACHINE_ERROR_NONE {
 			err := s.raiseIssue(ctx, mdb, machine, valid)
+			log.Printf("Found issue with %v -> %v with %v", machine, valid, err)
 			validationError.With(prometheus.Labels{"error": fmt.Sprintf("%v", err)})
 			return err
 		}
 	}
 
+	log.Printf("Validation Complete")
 	return nil
 }
 
