@@ -26,7 +26,7 @@ const (
 	MDB_PATH     = "github.com/brotherlogic/mdb"
 	GHB_PASSWORD = "ghbridge_password"
 
-	REFILL_FREQUENCY = time.Hour
+	REFILL_FREQUENCY = time.Minute *5
 )
 
 var (
