@@ -215,7 +215,18 @@ func (s *Server) resolveMachine(ctx context.Context, mdb *pb.Mdb) error {
 	for _, machine := range mdb.GetMachines() {
 		if machine.GetController() == mdb.GetConfig().GetCurrentMachine().GetController() && machine.GetHostname() == mdb.GetConfig().GetCurrentMachine().GetHostname() {
 			machine.Type = mdb.GetConfig().GetCurrentMachine().GetType()
-			return nil
+			
+			_, err := s.ghbclient.CloseIssue(ctx, &ghbpb.CloseIssueRequest{
+				User:  "brotherlogic",
+				Repo:  "mdb",
+				Id: int64(mdb.GetConfig().GetIssueId()),
+			})
+			if err == nil {
+				mdb.GetConfig().CurrentMachine = nil
+				mdb.GetConfig().IssueId = 0
+			}
+
+			return err
 		}
 	}
 
