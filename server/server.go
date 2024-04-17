@@ -147,6 +147,7 @@ func (s *Server) raiseIssue(ctx context.Context, mdb *pb.Mdb, machine *pb.Machin
 	if err != nil {
 		// If CreateIssue returns AlreadyExists we can re-use the issue id
 		if status.Code(err) != codes.AlreadyExists || issue != nil {
+			log.Printf("Returning %v maybe because %v", err, issue)
 		return err
 		}
 	}
