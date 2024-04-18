@@ -237,6 +237,8 @@ func (s *Server) resolveMachine(ctx context.Context, mdb *pb.Mdb) error {
 		}
 	}
 
+	log.Printf("Unable to locate machine in MDB: %v", mdb.GetConfig().GetCurrentMachine())
+
 	return nil
 }
 
