@@ -172,9 +172,25 @@ func (s *Server) dataMissing(ctx context.Context, machine *pb.Machine) pb.Machin
 	return pb.MachineErrors_MACHINE_ERROR_NONE
 }
 
+func resolveController(controller string) pb.MachineType {
+	switch controller {
+	case "(Raspberry Pi Trading)":
+		return pb.MachineType_MACHINE_TYPE_RASPBERRY_PI
+	}
+
+	return pb.MachineType_MACHINE_TYPE_UNKNOWN
+}
+
+func (s *Server) autofill(ctx context.Context, machine *pb.Machine) {
+	if machine.GetType() == pb.MachineType_MACHINE_TYPE_UNKNOWN {
+		machine.Type = resolveController(machine.GetController())
+	}
+}
+
 func (s *Server) validateMachines(ctx context.Context, mdb *pb.Mdb) error {
 	log.Printf("Validating Machines")
 	for _, machine := range mdb.GetMachines() {
+		s.autofill(ctx, machine)
 		valid := s.dataMissing(ctx, machine)
 		if valid != pb.MachineErrors_MACHINE_ERROR_NONE {
 			err := s.raiseIssue(ctx, mdb, machine, valid)
@@ -200,11 +216,12 @@ func (s *Server) checkIssue(ctx context.Context, mdb *pb.Mdb) error {
 	}
 
 	for _, label := range labels.GetLabels() {
-		if label == "raspberrypi" {
+		switch(label){
+		case "raspberrypi":
 			mdb.GetConfig().GetCurrentMachine().Type = pb.MachineType_MACHINE_TYPE_RASPBERRY_PI
-		} else if label == "intel" {
-			mdb.GetConfig().GetCurrentMachine().Type = pb.MachineType_MACHINE_TYPE_INTEL
-		} else {
+		case"intel": mdb.GetConfig().GetCurrentMachine().Type = pb.MachineType_MACHINE_TYPE_INTEL
+		case "iot": mdb.GetConfig().GetCurrentMachine().Type = pb.MachineType_MACHINE_TYPE_IOT_DEVICE
+		default:
 			log.Printf("Skipping label %v on %v", label, mdb.GetConfig().GetCurrentMachine())
 		}
 	}
