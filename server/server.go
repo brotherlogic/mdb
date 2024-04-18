@@ -152,7 +152,7 @@ func (s *Server) raiseIssue(ctx context.Context, mdb *pb.Mdb, machine *pb.Machin
 		}
 	}
 
-	log.Printf("Resolved to %v", issue)
+	log.Printf("Resolved to %v (%v)", issue, err)
 
 	if mdb.GetConfig() == nil {
 		mdb.Config = &pb.Config{}
