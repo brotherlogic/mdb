@@ -83,7 +83,7 @@ func ipv4ToString(ipv4 uint32) string {
 }
 
 func strToIpv4(ipv4 string) uint32 {
-	return binary.BigEndian.Uint32(net.ParseIP(ipv4))
+	return binary.BigEndian.Uint32(net.ParseIP(ipv4)[12:16])
 }
 
 func lookupv4(ipv4 uint32) (*pb.Machine, error) {
