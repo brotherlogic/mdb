@@ -2,8 +2,10 @@ package main
 
 import (
 	"context"
+	"encoding/binary"
 	"fmt"
 	"log"
+	"net"
 	"os"
 	"time"
 
@@ -12,6 +14,12 @@ import (
 
 	pb "github.com/brotherlogic/mdb/proto"
 )
+
+func ipv4ToString(ipv4 uint32) string {
+	ip := make(net.IP, 4)
+	binary.BigEndian.PutUint32(ip, ipv4)
+	return ip.String()
+}
 
 func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*60)
@@ -29,7 +37,12 @@ func main() {
 		log.Fatalf("Unable to drain queue: %v", err)
 	}
 
+	fmt.Printf("[host]\ntoru\n\n")
+
+	fmt.Printf("[raspberrypi]\n")
 	for _, machine := range resp.GetMachines() {
-		fmt.Printf("%v\n", machine)
+		if machine.GetType() == pb.MachineType_MACHINE_TYPE_RASPBERRY_PI {
+			fmt.Printf("%v\n", ipv4ToString(machine.GetIpv4()))
+		}
 	}
 }
