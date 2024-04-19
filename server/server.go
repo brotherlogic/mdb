@@ -141,9 +141,17 @@ func (s *Server) ListMachines(ctx context.Context, req *pb.ListMachinesRequest) 
 
 func (s *Server) raiseIssue(ctx context.Context, mdb *pb.Mdb, machine *pb.Machine, verr pb.MachineErrors) error {
 	body := ""
+
+	ccount := 0
+	for _, m := range mdb.GetMachines() {
+		if m.GetController() == machine.GetController() {
+			ccount++
+		}
+	}
+
 	switch verr {
 	case pb.MachineErrors_MACHINE_ERROR_MISSING_TYPE:
-		body = fmt.Sprintf("%v (%v) is missing the machine type", machine.GetHostname(), machine.GetController())
+		body = fmt.Sprintf("%v (%v) is missing the machine type [%v]", machine.GetHostname(), machine.GetController(), ccount)
 	case pb.MachineErrors_MACHINE_ERROR_NONE:
 		return status.Errorf(codes.Internal, "Trying to raise issue for unbroken machine")
 	}
