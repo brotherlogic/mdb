@@ -198,6 +198,8 @@ func resolveController(controller string) pb.MachineType {
 		return pb.MachineType_MACHINE_TYPE_IOT_DEVICE
 	case "(Sonos)":
 		return pb.MachineType_MACHINE_TYPE_IOT_DEVICE
+	case "(Miele & Cie. KG)":
+		return pb.MachineType_MACHINE_TYPE_IOT_DEVICE
 	}
 
 	return pb.MachineType_MACHINE_TYPE_UNKNOWN
