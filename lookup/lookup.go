@@ -93,10 +93,10 @@ func lookupv4(ipv4 uint32) (*pb.Machine, error) {
 func lookupv4str(ipv4 string) (*pb.Machine, error) {
 	addr, err := net.LookupAddr(ipv4)
 	if err != nil {
-		return nil, fmt.Errorf("lookupaddr error: (%v) -> %v", ipv4, err)
+		return nil, fmt.Errorf("lookupaddr error: (%v) -> %v --> %v", ipv4, err, strToIpv4(ipv4))
 	}
 
-	log.Printf("FOUND %v -> %v", ipv4, addr)
+	log.Printf("FOUND %v -> %v --> %v", ipv4, addr, strToIpv4(ipv4))
 
 	return &pb.Machine{
 		Ipv4:     strToIpv4(ipv4),
