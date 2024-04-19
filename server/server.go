@@ -247,6 +247,8 @@ func (s *Server) checkIssue(ctx context.Context, mdb *pb.Mdb) error {
 			mdb.GetConfig().GetCurrentMachine().Type = pb.MachineType_MACHINE_TYPE_IOT_DEVICE
 		case "apple":
 			mdb.GetConfig().GetCurrentMachine().Type = pb.MachineType_MACHINE_TYPE_APPLE
+		case "phone":
+			mdb.GetConfig().GetCurrentMachine().Type = pb.MachineType_MACHINE_TYPE_PHONE
 		default:
 			log.Printf("Skipping label %v on %v", label, mdb.GetConfig().GetCurrentMachine())
 		}
