@@ -143,7 +143,7 @@ func (s *Server) raiseIssue(ctx context.Context, mdb *pb.Mdb, machine *pb.Machin
 	body := ""
 	switch verr {
 	case pb.MachineErrors_MACHINE_ERROR_MISSING_TYPE:
-		body = fmt.Sprintf("%v is missing the machine type", machine.GetHostname())
+		body = fmt.Sprintf("%v (%v) is missing the machine type", machine.GetHostname(), machine.GetController())
 	case pb.MachineErrors_MACHINE_ERROR_NONE:
 		return status.Errorf(codes.Internal, "Trying to raise issue for unbroken machine")
 	}
