@@ -26,7 +26,7 @@ const (
 	MDB_PATH     = "github.com/brotherlogic/mdb"
 	GHB_PASSWORD = "ghbridge_password"
 
-	REFILL_FREQUENCY = time.Hour
+	REFILL_FREQUENCY = time.Minute * 5
 )
 
 var (
@@ -145,8 +145,19 @@ func (s *Server) raiseIssue(ctx context.Context, mdb *pb.Mdb, machine *pb.Machin
 		Body:  body,
 	})
 	if err != nil {
-		return err
+		// If CreateIssue returns AlreadyExists we can re-use the issue id
+		if status.Code(err) != codes.AlreadyExists || issue != nil {
+			log.Printf("Returning %v maybe because %v", err, issue)
+			return err
+		}
 	}
+
+	log.Printf("Resolved to %v (%v)", issue, err)
+
+	if mdb.GetConfig() == nil {
+		mdb.Config = &pb.Config{}
+	}
+
 	mdb.GetConfig().CurrentMachine = machine
 	mdb.GetConfig().IssueId = int32(issue.GetIssueId())
 
@@ -161,20 +172,44 @@ func (s *Server) dataMissing(ctx context.Context, machine *pb.Machine) pb.Machin
 	return pb.MachineErrors_MACHINE_ERROR_NONE
 }
 
+func resolveController(controller string) pb.MachineType {
+	switch controller {
+	case "(Raspberry Pi Trading)":
+		return pb.MachineType_MACHINE_TYPE_RASPBERRY_PI
+	case "(Belkin International)":
+		return pb.MachineType_MACHINE_TYPE_IOT_DEVICE
+	case "(Sonos)":
+		return pb.MachineType_MACHINE_TYPE_IOT_DEVICE
+	}
+
+	return pb.MachineType_MACHINE_TYPE_UNKNOWN
+}
+
+func (s *Server) autofill(ctx context.Context, machine *pb.Machine) {
+	if machine.GetType() == pb.MachineType_MACHINE_TYPE_UNKNOWN {
+		machine.Type = resolveController(machine.GetController())
+	}
+}
+
 func (s *Server) validateMachines(ctx context.Context, mdb *pb.Mdb) error {
+	log.Printf("Validating Machines")
 	for _, machine := range mdb.GetMachines() {
+		s.autofill(ctx, machine)
 		valid := s.dataMissing(ctx, machine)
 		if valid != pb.MachineErrors_MACHINE_ERROR_NONE {
 			err := s.raiseIssue(ctx, mdb, machine, valid)
+			log.Printf("Found issue with %v -> %v with %v", machine, valid, err)
 			validationError.With(prometheus.Labels{"error": fmt.Sprintf("%v", err)})
 			return err
 		}
 	}
 
+	log.Printf("Validation Complete")
 	return nil
 }
 
 func (s *Server) checkIssue(ctx context.Context, mdb *pb.Mdb) error {
+	log.Printf("Checking issues: %v", mdb)
 	labels, err := s.ghbclient.GetLabels(ctx, &ghbpb.GetLabelsRequest{
 		User: "brotherlogic",
 		Repo: "mdb",
@@ -185,9 +220,16 @@ func (s *Server) checkIssue(ctx context.Context, mdb *pb.Mdb) error {
 	}
 
 	for _, label := range labels.GetLabels() {
-		if label == "raspberrypi" {
+		switch label {
+		case "raspberrypi":
 			mdb.GetConfig().GetCurrentMachine().Type = pb.MachineType_MACHINE_TYPE_RASPBERRY_PI
-		} else {
+		case "intel":
+			mdb.GetConfig().GetCurrentMachine().Type = pb.MachineType_MACHINE_TYPE_INTEL
+		case "iot":
+			mdb.GetConfig().GetCurrentMachine().Type = pb.MachineType_MACHINE_TYPE_IOT_DEVICE
+		case "apple":
+			mdb.GetConfig().GetCurrentMachine().Type = pb.MachineType_MACHINE_TYPE_APPLE
+		default:
 			log.Printf("Skipping label %v on %v", label, mdb.GetConfig().GetCurrentMachine())
 		}
 	}
@@ -204,9 +246,23 @@ func (s *Server) resolveMachine(ctx context.Context, mdb *pb.Mdb) error {
 	for _, machine := range mdb.GetMachines() {
 		if machine.GetController() == mdb.GetConfig().GetCurrentMachine().GetController() && machine.GetHostname() == mdb.GetConfig().GetCurrentMachine().GetHostname() {
 			machine.Type = mdb.GetConfig().GetCurrentMachine().GetType()
-			return nil
+
+			_, err := s.ghbclient.CloseIssue(ctx, &ghbpb.CloseIssueRequest{
+				User: "brotherlogic",
+				Repo: "mdb",
+				Id:   int64(mdb.GetConfig().GetIssueId()),
+			})
+			log.Printf("Resolved machine and closed issue: %v", err)
+			if err == nil {
+				mdb.GetConfig().CurrentMachine = nil
+				mdb.GetConfig().IssueId = 0
+			}
+
+			return err
 		}
 	}
+
+	log.Printf("Unable to locate machine in MDB: %v", mdb.GetConfig().GetCurrentMachine())
 
 	return nil
 }

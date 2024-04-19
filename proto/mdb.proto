@@ -13,6 +13,8 @@ enum MachineType {
     MACHINE_TYPE_UNKNOWN = 0;
     MACHINE_TYPE_RASPBERRY_PI = 1;
     MACHINE_TYPE_IOT_DEVICE = 2;
+    MACHINE_TYPE_INTEL = 3;
+    MACHINE_TYPE_APPLE = 4;
 }
 
 enum MachineErrors {
