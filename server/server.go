@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	lookup "github.com/brotherlogic/mdb/lookup"
@@ -92,6 +93,14 @@ func (s *Server) refillDatabase(ctx context.Context) error {
 	return s.saveConfig(ctx, config)
 }
 
+func cleanConfig(config *pb.Mdb) {
+	for _, machine := range config.GetMachines() {
+		if strings.Contains(machine.GetMac(), "Unable") {
+			machine.Mac = ""
+		}
+	}
+}
+
 func (s *Server) loadConfig(ctx context.Context) (*pb.Mdb, error) {
 	data, err := s.rsclient.Read(ctx, &rspb.ReadRequest{
 		Key: MDB_PATH,
@@ -105,6 +114,7 @@ func (s *Server) loadConfig(ctx context.Context) (*pb.Mdb, error) {
 
 	ret := &pb.Mdb{}
 	err = proto.Unmarshal(data.GetValue().GetValue(), ret)
+	cleanConfig(ret)
 	return ret, err
 }
 

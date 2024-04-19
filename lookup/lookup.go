@@ -35,7 +35,7 @@ func getMacAddress(addr string) (string, string) {
 	}
 
 	for _, line := range strings.Split(string(out), "\n") {
-		if strings.HasPrefix(line, "MAC") {
+		if strings.HasPrefix(line, "MAC") && !strings.Contains(line, "Unable") {
 			return strings.Split(line, " ")[2], strings.Join(strings.Split(line, " ")[3:], " ")
 		}
 	}
