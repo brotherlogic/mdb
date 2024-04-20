@@ -16,6 +16,7 @@ enum MachineType {
     MACHINE_TYPE_INTEL = 3;
     MACHINE_TYPE_APPLE = 4;
     MACHINE_TYPE_PHONE  = 5;
+    MACHINE_TYPE_TABLET = 6;
 }
 
 enum MachineErrors {
