@@ -37,7 +37,20 @@ var (
 	refillError = promauto.NewCounterVec(prometheus.CounterOpts{
 		Name: "mdb_refill_error",
 	}, []string{"error"})
+	types = promauto.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "mdb_machine_types",
+	}, []string{"type"})
 )
+
+func metrics(config *pb.Mdb) {
+	typeCount := make(map[string]float64)
+	for _, machine := range config.GetMachines() {
+		typeCount[fmt.Sprintf("%v", machine.GetType())]++
+	}
+	for key, val := range typeCount {
+		types.With(prometheus.Labels{"type": key}).Set(val)
+	}
+}
 
 type Server struct {
 	ghbclient ghbclient.GithubridgeClient
@@ -77,6 +90,8 @@ func (s *Server) refillDatabase(ctx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("unable to load config: %w", err)
 	}
+
+	metrics(config)
 
 	err = lookup.FillDB(ctx, config)
 	if err != nil {
