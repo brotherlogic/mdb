@@ -209,6 +209,8 @@ func resolveController(controller string) pb.MachineType {
 	switch controller {
 	case "(Raspberry Pi Trading)":
 		return pb.MachineType_MACHINE_TYPE_RASPBERRY_PI
+	case "(Raspberry Pi Foundation)":
+		return pb.MachineType_MACHINE_TYPE_RASPBERRY_PI
 	case "(Belkin International)":
 		return pb.MachineType_MACHINE_TYPE_IOT_DEVICE
 	case "(Sonos)":
