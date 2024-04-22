@@ -2,8 +2,10 @@ package server
 
 import (
 	"context"
+	"encoding/binary"
 	"fmt"
 	"log"
+	"net"
 	"strings"
 	"time"
 
@@ -154,6 +156,12 @@ func (s *Server) ListMachines(ctx context.Context, req *pb.ListMachinesRequest) 
 	return &pb.ListMachinesResponse{Machines: config.GetMachines()}, nil
 }
 
+func ipv4ToString(ipv4 uint32) string {
+	ip := make(net.IP, 4)
+	binary.BigEndian.PutUint32(ip, ipv4)
+	return ip.String()
+}
+
 func (s *Server) raiseIssue(ctx context.Context, mdb *pb.Mdb, machine *pb.Machine, verr pb.MachineErrors) error {
 	body := ""
 
@@ -167,6 +175,8 @@ func (s *Server) raiseIssue(ctx context.Context, mdb *pb.Mdb, machine *pb.Machin
 	switch verr {
 	case pb.MachineErrors_MACHINE_ERROR_MISSING_TYPE:
 		body = fmt.Sprintf("%v (%v) is missing the machine type [%v]", machine.GetHostname(), machine.GetController(), ccount)
+	case pb.MachineErrors_MACHINE_ERROR_UNSTABLE_IP:
+		body = fmt.Sprintf("%v has recorded mulitple IPs (e.g. %v)", machine.GetHostname(), ipv4ToString(machine.GetIpv4()))
 	case pb.MachineErrors_MACHINE_ERROR_NONE:
 		return status.Errorf(codes.Internal, "Trying to raise issue for unbroken machine")
 	}
@@ -242,6 +252,16 @@ func (s *Server) validateMachines(ctx context.Context, mdb *pb.Mdb) error {
 		}
 	}
 
+	log.Printf("Looking for repeated IP addresses")
+	macToIP := make(map[string]int32)
+	for _, machine := range mdb.GetMachines() {
+		if _, ok := macToIP[machine.GetMac()]; ok {
+			err := s.raiseIssue(ctx, mdb, machine, pb.MachineErrors_MACHINE_ERROR_UNSTABLE_IP)
+			validationError.With(prometheus.Labels{"error": fmt.Sprintf("%v", err)})
+			return err
+		}
+	}
+
 	log.Printf("Validation Complete")
 	return nil
 }
@@ -273,6 +293,15 @@ func (s *Server) checkIssue(ctx context.Context, mdb *pb.Mdb) error {
 			mdb.GetConfig().GetCurrentMachine().Type = pb.MachineType_MACHINE_TYPE_TABLET
 		case "amd":
 			mdb.GetConfig().GetCurrentMachine().Type = pb.MachineType_MACHINE_TYPE_AMD
+		case "fixed":
+			// Clear all instances of this entity and re-create the db
+			var nm []*pb.Machine
+			for _, machine := range mdb.GetMachines() {
+				if machine.GetMac() != mdb.GetConfig().GetCurrentMachine().GetMac() {
+					nm = append(nm, machine)
+				}
+			}
+			mdb.Machines = nm
 		default:
 			log.Printf("Skipping label %v on %v", label, mdb.GetConfig().GetCurrentMachine())
 		}
@@ -306,9 +335,19 @@ func (s *Server) resolveMachine(ctx context.Context, mdb *pb.Mdb) error {
 		}
 	}
 
-	log.Printf("Unable to locate machine in MDB: %v", mdb.GetConfig().GetCurrentMachine())
+	// If we can't find the machine, delete the issue
+	log.Printf("Unable to locate machine in MDB, closing issue: %v", mdb.GetConfig().GetCurrentMachine())
+	_, err := s.ghbclient.CloseIssue(ctx, &ghbpb.CloseIssueRequest{
+		User: "brotherlogic",
+		Repo: "mdb",
+		Id:   int64(mdb.GetConfig().GetIssueId()),
+	})
+	if err == nil {
+		mdb.GetConfig().CurrentMachine = nil
+		mdb.GetConfig().IssueId = 0
+	}
 
-	return nil
+	return err
 }
 
 func (s *Server) UpdateMachine(ctx context.Context, req *pb.UpdateMachineRequest) (*pb.UpdateMachineResponse, error) {

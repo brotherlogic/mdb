@@ -23,6 +23,7 @@ enum MachineType {
 enum MachineErrors {
     MACHINE_ERROR_NONE = 0;
     MACHINE_ERROR_MISSING_TYPE = 1;
+    MACHINE_ERROR_UNSTABLE_IP = 2;
 }
 
 message Mdb {
