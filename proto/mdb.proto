@@ -20,10 +20,20 @@ enum MachineType {
     MACHINE_TYPE_AMD = 7;
 }
 
+enum MachineUse {
+    MACHINE_USE_UNKNOWN = 0;
+    MACHINE_USE_DEV_DESKTOP = 1;
+    MACHINE_USE_DEV_SERVER = 2;
+    MACHINE_USE_KUBERNETES_CLUSTER = 3;
+    MACHINE_USE_LOCAL_CLUSTER = 4;
+    MACHINE_USE_NOT_IN_USE = 5;
+}
+
 enum MachineErrors {
     MACHINE_ERROR_NONE = 0;
     MACHINE_ERROR_MISSING_TYPE = 1;
     MACHINE_ERROR_UNSTABLE_IP = 2;
+    MACHINE_ERROR_MISSING_USE = 3;
 }
 
 message Mdb {
@@ -39,6 +49,7 @@ message Machine {
 
     // These are the user specified eleemnts
     MachineType type = 5;
+    MachineUse use = 6;
 }
 
 message ListMachinesRequest {

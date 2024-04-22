@@ -175,6 +175,8 @@ func (s *Server) raiseIssue(ctx context.Context, mdb *pb.Mdb, machine *pb.Machin
 	switch verr {
 	case pb.MachineErrors_MACHINE_ERROR_MISSING_TYPE:
 		body = fmt.Sprintf("%v (%v) is missing the machine type [%v]", machine.GetHostname(), machine.GetController(), ccount)
+	case pb.MachineErrors_MACHINE_ERROR_MISSING_USE:
+		body = fmt.Sprintf("%v (%v) is missing the machine use", machine.GetHostname(), machine.GetType())
 	case pb.MachineErrors_MACHINE_ERROR_UNSTABLE_IP:
 		body = fmt.Sprintf("%v has recorded mulitple IPs (e.g. %v)", machine.GetHostname(), ipv4ToString(machine.GetIpv4()))
 	case pb.MachineErrors_MACHINE_ERROR_NONE:
@@ -210,6 +212,14 @@ func (s *Server) raiseIssue(ctx context.Context, mdb *pb.Mdb, machine *pb.Machin
 func (s *Server) dataMissing(ctx context.Context, machine *pb.Machine) pb.MachineErrors {
 	if machine.GetType() == pb.MachineType_MACHINE_TYPE_UNKNOWN {
 		return pb.MachineErrors_MACHINE_ERROR_MISSING_TYPE
+	}
+
+	if machine.GetType() == pb.MachineType_MACHINE_TYPE_INTEL ||
+		machine.GetType() == pb.MachineType_MACHINE_TYPE_RASPBERRY_PI ||
+		machine.GetType() == pb.MachineType_MACHINE_TYPE_AMD {
+		if machine.GetUse() == pb.MachineUse_MACHINE_USE_UNKNOWN {
+			return pb.MachineErrors_MACHINE_ERROR_MISSING_USE
+		}
 	}
 
 	return pb.MachineErrors_MACHINE_ERROR_NONE
@@ -293,6 +303,8 @@ func (s *Server) checkIssue(ctx context.Context, mdb *pb.Mdb) error {
 			mdb.GetConfig().GetCurrentMachine().Type = pb.MachineType_MACHINE_TYPE_TABLET
 		case "amd":
 			mdb.GetConfig().GetCurrentMachine().Type = pb.MachineType_MACHINE_TYPE_AMD
+		case "kubernetes-cluster":
+			mdb.GetConfig().GetCurrentMachine().Use = pb.MachineUse_MACHINE_USE_KUBERNETES_CLUSTER
 		case "fixed":
 			// Clear all instances of this entity and re-create the db
 			var nm []*pb.Machine
