@@ -232,6 +232,7 @@ func (s *Server) validateMachines(ctx context.Context, mdb *pb.Mdb) error {
 	log.Printf("Validating Machines")
 	for _, machine := range mdb.GetMachines() {
 		s.autofill(ctx, machine)
+
 		valid := s.dataMissing(ctx, machine)
 		if valid != pb.MachineErrors_MACHINE_ERROR_NONE {
 			err := s.raiseIssue(ctx, mdb, machine, valid)
