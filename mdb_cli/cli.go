@@ -37,12 +37,7 @@ func main() {
 		log.Fatalf("Unable to drain queue: %v", err)
 	}
 
-	fmt.Printf("[host]\ntoru\n\n")
-
-	fmt.Printf("[raspberrypi]\n")
 	for _, machine := range resp.GetMachines() {
-		if machine.GetType() == pb.MachineType_MACHINE_TYPE_RASPBERRY_PI {
-			fmt.Printf("%v\n", ipv4ToString(machine.GetIpv4()))
-		}
+				fmt.Printf("%v %v\n", ipv4ToString(machine.GetIpv4()), machine)
 	}
 }

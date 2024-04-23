@@ -305,6 +305,8 @@ func (s *Server) checkIssue(ctx context.Context, mdb *pb.Mdb) error {
 			mdb.GetConfig().GetCurrentMachine().Type = pb.MachineType_MACHINE_TYPE_AMD
 		case "kubernetes-cluster":
 			mdb.GetConfig().GetCurrentMachine().Use = pb.MachineUse_MACHINE_USE_KUBERNETES_CLUSTER
+		case "development-server":
+			mdb.GetConfig().GetCurrentMachine().Use = pb.MachineUse_MACHINE_USE_DEV_SERVER
 		case "fixed":
 			// Clear all instances of this entity and re-create the db
 			var nm []*pb.Machine
