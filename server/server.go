@@ -333,6 +333,9 @@ func (s *Server) resolveMachine(ctx context.Context, mdb *pb.Mdb) error {
 	for _, machine := range mdb.GetMachines() {
 		if machine.GetController() == mdb.GetConfig().GetCurrentMachine().GetController() && machine.GetHostname() == mdb.GetConfig().GetCurrentMachine().GetHostname() {
 			machine.Type = mdb.GetConfig().GetCurrentMachine().GetType()
+			if  mdb.GetConfig().GetCurrentMachine().GetUse() != pb.MachineUse_MACHINE_USE_UNKNOWN {
+				machine.Use = mdb.GetConfig().GetCurrentMachine().GetUse() 
+			}
 
 			_, err := s.ghbclient.CloseIssue(ctx, &ghbpb.CloseIssueRequest{
 				User: "brotherlogic",
