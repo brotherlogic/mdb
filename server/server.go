@@ -117,6 +117,14 @@ func cleanConfig(config *pb.Mdb) {
 		}
 	}
 
+	var vm []*pb.Machine
+	for _, machine := range config.GetMachines() {
+		if machine.Ipv4 > 0 {
+			vm = append(vm, machine)
+		}
+	}
+	config.Machines = vm
+
 	// Map out ips to machines
 	ipMap := make(map[uint32][]*pb.Machine)
 	for _, machine := range config.GetMachines() {
@@ -124,16 +132,6 @@ func cleanConfig(config *pb.Mdb) {
 			ipMap[machine.GetIpv4()] = make([]*pb.Machine, 0)
 		}
 		ipMap[machine.GetIpv4()] = append(ipMap[machine.GetIpv4()], machine)
-	}
-
-	for ip, machines := range ipMap {
-		var nmachines []*pb.Machine
-		for i, machine := range machines {
-			foundIndex := -1
-			for _, nmachine := range nmachines {
-				if nmachine.
-			}
-		}
 	}
 }
 
@@ -328,7 +326,7 @@ func (s *Server) checkIssue(ctx context.Context, mdb *pb.Mdb) error {
 			mdb.GetConfig().GetCurrentMachine().Use = pb.MachineUse_MACHINE_USE_DEV_SERVER
 		case "home-cluster":
 			mdb.GetConfig().GetCurrentMachine().Use = pb.MachineUse_MACHINE_USE_LOCAL_CLUSTER
-			case "fixed":
+		case "fixed":
 			// Clear all instances of this entity and re-create the db
 			var nm []*pb.Machine
 			for _, machine := range mdb.GetMachines() {
@@ -354,7 +352,7 @@ func (s *Server) resolveMachine(ctx context.Context, mdb *pb.Mdb) error {
 	for _, machine := range mdb.GetMachines() {
 		if machine.GetController() == mdb.GetConfig().GetCurrentMachine().GetController() && machine.GetHostname() == mdb.GetConfig().GetCurrentMachine().GetHostname() {
 			machine.Type = mdb.GetConfig().GetCurrentMachine().GetType()
-if machine.Use == pb.MachineUse_MACHINE_USE_UNKNOWN {
+			if machine.Use == pb.MachineUse_MACHINE_USE_UNKNOWN {
 				machine.Use = mdb.Config.GetCurrentMachine().GetUse()
 			}
 
