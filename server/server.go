@@ -351,23 +351,34 @@ func (s *Server) resolveMachine(ctx context.Context, mdb *pb.Mdb) error {
 
 	for _, machine := range mdb.GetMachines() {
 		if machine.GetController() == mdb.GetConfig().GetCurrentMachine().GetController() && machine.GetHostname() == mdb.GetConfig().GetCurrentMachine().GetHostname() {
-			machine.Type = mdb.GetConfig().GetCurrentMachine().GetType()
-			if machine.Use == pb.MachineUse_MACHINE_USE_UNKNOWN {
+			updated := false
+
+			if machine.GetType() == pb.MachineType_MACHINE_TYPE_UNKNOWN && mdb.GetConfig().GetCurrentMachine().GetType() != pb.MachineType_MACHINE_TYPE_UNKNOWN {
+				machine.Type = mdb.GetConfig().GetCurrentMachine().GetType()
+				updated = true
+			}
+			if machine.Use == pb.MachineUse_MACHINE_USE_UNKNOWN && mdb.GetConfig().GetCurrentMachine().GetType() != pb.MachineType_MACHINE_TYPE_UNKNOWN {
 				machine.Use = mdb.Config.GetCurrentMachine().GetUse()
+				updated = true
 			}
 
-			_, err := s.ghbclient.CloseIssue(ctx, &ghbpb.CloseIssueRequest{
-				User: "brotherlogic",
-				Repo: "mdb",
-				Id:   int64(mdb.GetConfig().GetIssueId()),
-			})
-			log.Printf("Resolved machine and closed issue: %v", err)
-			if err == nil {
-				mdb.GetConfig().CurrentMachine = nil
-				mdb.GetConfig().IssueId = 0
-			}
+			if updated {
+				_, err := s.ghbclient.CloseIssue(ctx, &ghbpb.CloseIssueRequest{
+					User: "brotherlogic",
+					Repo: "mdb",
+					Id:   int64(mdb.GetConfig().GetIssueId()),
+				})
+				log.Printf("Resolved machine and closed issue: %v", err)
+				if err == nil {
+					mdb.GetConfig().CurrentMachine = nil
+					mdb.GetConfig().IssueId = 0
+				}
 
-			return err
+				return err
+			} else {
+				// Issue was not resolved
+				return nil
+			}
 		}
 	}
 
