@@ -140,8 +140,10 @@ func cleanConfig(config *pb.Mdb) {
 			if machines[0].Hostname == machines[1].Hostname {
 				if machines[0].GetMac() != "" {
 					nmachines = append(nmachines, machines[0])
-				} else {
+				} else if machines[1].GetMac() != "" {
 					nmachines = append(nmachines, machines[1])
+				} else {
+					nmachines = append(nmachines, machines...)
 				}
 			}
 		} else {
