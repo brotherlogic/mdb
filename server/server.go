@@ -116,6 +116,41 @@ func cleanConfig(config *pb.Mdb) {
 			machine.Mac = ""
 		}
 	}
+
+	var vm []*pb.Machine
+	for _, machine := range config.GetMachines() {
+		if machine.Ipv4 > 0 {
+			vm = append(vm, machine)
+		}
+	}
+	config.Machines = vm
+
+	// Map out ips to machines
+	ipMap := make(map[uint32][]*pb.Machine)
+	for _, machine := range config.GetMachines() {
+		if _, ok := ipMap[(machine.GetIpv4())]; !ok {
+			ipMap[machine.GetIpv4()] = make([]*pb.Machine, 0)
+		}
+		ipMap[machine.GetIpv4()] = append(ipMap[machine.GetIpv4()], machine)
+	}
+
+	var nmachines []*pb.Machine
+	for _, machines := range ipMap {
+		if len(machines) == 2 {
+			if machines[0].Hostname == machines[1].Hostname {
+				if machines[0].GetMac() != "" {
+					nmachines = append(nmachines, machines[0])
+				} else if machines[1].GetMac() != "" {
+					nmachines = append(nmachines, machines[1])
+				} else {
+					nmachines = append(nmachines, machines...)
+				}
+			}
+		} else {
+			nmachines = append(nmachines, machines...)
+		}
+	}
+	config.Machines = nmachines
 }
 
 func (s *Server) loadConfig(ctx context.Context) (*pb.Mdb, error) {
@@ -277,12 +312,12 @@ func (s *Server) validateMachines(ctx context.Context, mdb *pb.Mdb) error {
 }
 
 func (s *Server) checkIssue(ctx context.Context, mdb *pb.Mdb) error {
-	log.Printf("Checking issues: %v", mdb)
 	labels, err := s.ghbclient.GetLabels(ctx, &ghbpb.GetLabelsRequest{
 		User: "brotherlogic",
 		Repo: "mdb",
 		Id:   mdb.GetConfig().GetIssueId(),
 	})
+	log.Printf("Checking issues: %v -> %v", mdb.GetConfig(), err)
 	if err != nil {
 		return err
 	}
@@ -307,6 +342,8 @@ func (s *Server) checkIssue(ctx context.Context, mdb *pb.Mdb) error {
 			mdb.GetConfig().GetCurrentMachine().Use = pb.MachineUse_MACHINE_USE_KUBERNETES_CLUSTER
 		case "development-server":
 			mdb.GetConfig().GetCurrentMachine().Use = pb.MachineUse_MACHINE_USE_DEV_SERVER
+		case "home-cluster":
+			mdb.GetConfig().GetCurrentMachine().Use = pb.MachineUse_MACHINE_USE_LOCAL_CLUSTER
 		case "fixed":
 			// Clear all instances of this entity and re-create the db
 			var nm []*pb.Machine
@@ -332,23 +369,34 @@ func (s *Server) resolveMachine(ctx context.Context, mdb *pb.Mdb) error {
 
 	for _, machine := range mdb.GetMachines() {
 		if machine.GetController() == mdb.GetConfig().GetCurrentMachine().GetController() && machine.GetHostname() == mdb.GetConfig().GetCurrentMachine().GetHostname() {
-			machine.Type = mdb.GetConfig().GetCurrentMachine().GetType()
-			if  mdb.GetConfig().GetCurrentMachine().GetUse() != pb.MachineUse_MACHINE_USE_UNKNOWN {
-				machine.Use = mdb.GetConfig().GetCurrentMachine().GetUse() 
+			updated := false
+
+			if machine.GetType() == pb.MachineType_MACHINE_TYPE_UNKNOWN && mdb.GetConfig().GetCurrentMachine().GetType() != pb.MachineType_MACHINE_TYPE_UNKNOWN {
+				machine.Type = mdb.GetConfig().GetCurrentMachine().GetType()
+				updated = true
+			}
+			if machine.Use == pb.MachineUse_MACHINE_USE_UNKNOWN && mdb.GetConfig().GetCurrentMachine().GetType() != pb.MachineType_MACHINE_TYPE_UNKNOWN {
+				machine.Use = mdb.Config.GetCurrentMachine().GetUse()
+				updated = true
 			}
 
-			_, err := s.ghbclient.CloseIssue(ctx, &ghbpb.CloseIssueRequest{
-				User: "brotherlogic",
-				Repo: "mdb",
-				Id:   int64(mdb.GetConfig().GetIssueId()),
-			})
-			log.Printf("Resolved machine and closed issue: %v", err)
-			if err == nil {
-				mdb.GetConfig().CurrentMachine = nil
-				mdb.GetConfig().IssueId = 0
-			}
+			if updated {
+				_, err := s.ghbclient.CloseIssue(ctx, &ghbpb.CloseIssueRequest{
+					User: "brotherlogic",
+					Repo: "mdb",
+					Id:   int64(mdb.GetConfig().GetIssueId()),
+				})
+				log.Printf("Resolved machine and closed issue: %v", err)
+				if err == nil {
+					mdb.GetConfig().CurrentMachine = nil
+					mdb.GetConfig().IssueId = 0
+				}
 
-			return err
+				return err
+			} else {
+				// Issue was not resolved
+				return nil
+			}
 		}
 	}
 

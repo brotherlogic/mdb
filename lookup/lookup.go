@@ -29,7 +29,7 @@ var (
 )
 
 func getMacAddress(addr string) (string, string) {
-	out, err := exec.Command("/usr/bin/nmap", addr).CombinedOutput()
+	out, err := exec.Command("/usr/bin/nmap", "--host-timeout", "5s", addr).CombinedOutput()
 	if err != nil {
 		return fmt.Sprintf("unable to nmap: %v -> %v", err, string(out)), ""
 	}
