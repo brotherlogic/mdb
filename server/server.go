@@ -312,12 +312,12 @@ func (s *Server) validateMachines(ctx context.Context, mdb *pb.Mdb) error {
 }
 
 func (s *Server) checkIssue(ctx context.Context, mdb *pb.Mdb) error {
-	log.Printf("Checking issues: %v", mdb)
 	labels, err := s.ghbclient.GetLabels(ctx, &ghbpb.GetLabelsRequest{
 		User: "brotherlogic",
 		Repo: "mdb",
 		Id:   mdb.GetConfig().GetIssueId(),
 	})
+	log.Printf("Checking issues: %v -> %v", mdb.GetConfig(), err)
 	if err != nil {
 		return err
 	}
