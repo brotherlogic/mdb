@@ -343,6 +343,8 @@ func (s *Server) checkIssue(ctx context.Context, mdb *pb.Mdb) error {
 			mdb.GetConfig().GetCurrentMachine().Use = pb.MachineUse_MACHINE_USE_KUBERNETES_CLUSTER
 		case "development-server":
 			mdb.GetConfig().GetCurrentMachine().Use = pb.MachineUse_MACHINE_USE_DEV_SERVER
+		case "development-desktop":
+			mdb.GetConfig().GetCurrentMachine().Use = pb.MachineUse_MACHINE_USE_DEV_DESKTOP
 		case "home-cluster":
 			mdb.GetConfig().GetCurrentMachine().Use = pb.MachineUse_MACHINE_USE_LOCAL_CLUSTER
 		case "fixed":
