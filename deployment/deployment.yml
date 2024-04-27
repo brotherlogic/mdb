@@ -63,7 +63,7 @@ spec:
         allowPrivilegeEscalation: false
       containers:
         - name: mdb
-          image: registry.brotherlogic-backend.com/brotherlogic/mdb:0.86.0 # {"$imagepolicy": "flux-system:mdb"}
+          image: registry.brotherlogic-backend.com/brotherlogic/mdb:0.88.0 # {"$imagepolicy": "flux-system:mdb"}
           ports:
             - containerPort: 8080
       imagePullSecrets:
