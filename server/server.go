@@ -240,6 +240,7 @@ func (s *Server) raiseIssue(ctx context.Context, mdb *pb.Mdb, machine *pb.Machin
 
 	mdb.GetConfig().CurrentMachine = machine
 	mdb.GetConfig().IssueId = int32(issue.GetIssueId())
+	mdb.GetConfig().IssueType = verr
 
 	return nil
 }
@@ -391,6 +392,7 @@ func (s *Server) resolveMachine(ctx context.Context, mdb *pb.Mdb) error {
 				if err == nil {
 					mdb.GetConfig().CurrentMachine = nil
 					mdb.GetConfig().IssueId = 0
+					mdb.GetConfig().IssueType = pb.MachineErrors_MACHINE_ERROR_NONE
 				}
 
 				return err
