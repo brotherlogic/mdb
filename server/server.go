@@ -363,24 +363,25 @@ func (s *Server) checkIssue(ctx context.Context, mdb *pb.Mdb) error {
 }
 
 func (s *Server) resolveMachine(ctx context.Context, mdb *pb.Mdb) error {
+	log.Printf("Resolving Machines: %v", mdb.GetConfig())
 	if mdb.GetConfig().GetCurrentMachine().GetType() == pb.MachineType_MACHINE_TYPE_UNKNOWN {
 		return nil
 	}
 
 	for _, machine := range mdb.GetMachines() {
 		if machine.GetController() == mdb.GetConfig().GetCurrentMachine().GetController() && machine.GetHostname() == mdb.GetConfig().GetCurrentMachine().GetHostname() {
-			updated := false
 
 			if machine.GetType() == pb.MachineType_MACHINE_TYPE_UNKNOWN && mdb.GetConfig().GetCurrentMachine().GetType() != pb.MachineType_MACHINE_TYPE_UNKNOWN {
 				machine.Type = mdb.GetConfig().GetCurrentMachine().GetType()
-				updated = true
-			}
-			if machine.Use == pb.MachineUse_MACHINE_USE_UNKNOWN && mdb.GetConfig().GetCurrentMachine().GetType() != pb.MachineType_MACHINE_TYPE_UNKNOWN {
-				machine.Use = mdb.Config.GetCurrentMachine().GetUse()
-				updated = true
 			}
 
-			if updated {
+			log.Printf("USE: %v, %v", machine.GetUse(), mdb.GetConfig().GetCurrentMachine().GetUse())
+			if machine.GetUse() == pb.MachineUse_MACHINE_USE_UNKNOWN && mdb.GetConfig().GetCurrentMachine().GetUse() != pb.MachineUse_MACHINE_USE_UNKNOWN {
+				machine.Use = mdb.GetConfig().GetCurrentMachine().GetUse()
+			}
+
+			if (mdb.GetConfig().GetIssueType() == pb.MachineErrors_MACHINE_ERROR_MISSING_TYPE && machine.GetType() != pb.MachineType_MACHINE_TYPE_UNKNOWN) ||
+				(mdb.GetConfig().GetIssueType() == pb.MachineErrors_MACHINE_ERROR_MISSING_USE && machine.GetUse() != pb.MachineUse_MACHINE_USE_UNKNOWN) {
 				_, err := s.ghbclient.CloseIssue(ctx, &ghbpb.CloseIssueRequest{
 					User: "brotherlogic",
 					Repo: "mdb",

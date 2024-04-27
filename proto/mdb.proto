@@ -7,6 +7,7 @@ option go_package = "github.com/brotherlogic/mdb/proto";
 message Config {
     Machine current_machine = 1;
     int32 issue_id = 2;
+    MachineErrors issue_type = 3;
 }
 
 enum MachineType {
