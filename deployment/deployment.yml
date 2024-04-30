@@ -48,7 +48,7 @@ spec:
   selector:
     matchLabels:
       app: mdb
-  replicas: 3
+  replicas: 1
   template:
     metadata:
       labels:
