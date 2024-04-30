@@ -240,6 +240,7 @@ func (s *Server) raiseIssue(ctx context.Context, mdb *pb.Mdb, machine *pb.Machin
 
 	mdb.GetConfig().CurrentMachine = machine
 	mdb.GetConfig().IssueId = int32(issue.GetIssueId())
+	mdb.GetConfig().IssueType = verr
 
 	return nil
 }
@@ -342,8 +343,12 @@ func (s *Server) checkIssue(ctx context.Context, mdb *pb.Mdb) error {
 			mdb.GetConfig().GetCurrentMachine().Use = pb.MachineUse_MACHINE_USE_KUBERNETES_CLUSTER
 		case "development-server":
 			mdb.GetConfig().GetCurrentMachine().Use = pb.MachineUse_MACHINE_USE_DEV_SERVER
+		case "development-desktop":
+			mdb.GetConfig().GetCurrentMachine().Use = pb.MachineUse_MACHINE_USE_DEV_DESKTOP
 		case "home-cluster":
 			mdb.GetConfig().GetCurrentMachine().Use = pb.MachineUse_MACHINE_USE_LOCAL_CLUSTER
+		case "windows":
+			mdb.GetConfig().GetCurrentMachine().Use = pb.MachineUse_MACHINE_USE_NOT_IN_USE
 		case "fixed":
 			// Clear all instances of this entity and re-create the db
 			var nm []*pb.Machine
@@ -391,6 +396,7 @@ func (s *Server) resolveMachine(ctx context.Context, mdb *pb.Mdb) error {
 				if err == nil {
 					mdb.GetConfig().CurrentMachine = nil
 					mdb.GetConfig().IssueId = 0
+					mdb.GetConfig().IssueType = pb.MachineErrors_MACHINE_ERROR_NONE
 				}
 
 				return err
