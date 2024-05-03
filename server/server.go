@@ -124,6 +124,29 @@ func cleanConfig(config *pb.Mdb) {
 		}
 	}
 	config.Machines = vm
+
+	// Clear repeated entries
+	for i, machine1 := range config.GetMachines() {
+		for j, machine2 := range config.GetMachines() {
+			if i != j {
+				if machine1.GetIpv4() == machine2.GetIpv4() && machine1.GetHostname() == machine2.GetHostname() {
+					if machine1.GetMac() != "" && machine2.GetMac() == "" {
+						machine2.MarkedForDelete = true
+					} else if machine2.GetMac() != "" && machine1.GetMac() == "" {
+						machine1.MarkedForDelete = true
+					}
+				}
+			}
+		}
+	}
+
+	var nm []*pb.Machine
+	for _, machine := range config.GetMachines() {
+		if !machine.GetMarkedForDelete() {
+			nm = append(nm, machine)
+		}
+	}
+	config.Machines = nm
 }
 
 func (s *Server) loadConfig(ctx context.Context) (*pb.Mdb, error) {

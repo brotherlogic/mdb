@@ -98,3 +98,55 @@ func TestSetUseClearsIssue(t *testing.T) {
 		t.Errorf("Issue was not removed on label set")
 	}
 }
+
+func TestCleanMachines(t *testing.T) {
+	s, _ := GetTestServer([]*pb.Machine{
+		{
+			Ipv4:     1234,
+			Hostname: "blah",
+			Mac:      "MAC",
+			Type:     pb.MachineType_MACHINE_TYPE_RASPBERRY_PI,
+		},
+		{
+			Ipv4:     1234,
+			Hostname: "blah",
+		},
+	})
+
+	// Validate the mdb
+	mdb, err := s.loadConfig(context.Background())
+	if err != nil {
+		t.Fatalf("Unablet to load config: %v", err)
+	}
+
+	if len(mdb.GetMachines()) == 2 {
+		t.Errorf("Machine was not cleaned")
+	}
+
+}
+
+func TestCleanMachines_WithDiffHostname(t *testing.T) {
+	s, _ := GetTestServer([]*pb.Machine{
+		{
+			Ipv4:     1234,
+			Hostname: "blah",
+			Mac:      "MAC",
+			Type:     pb.MachineType_MACHINE_TYPE_RASPBERRY_PI,
+		},
+		{
+			Ipv4:     1234,
+			Hostname: "foo",
+		},
+	})
+
+	// Validate the mdb
+	mdb, err := s.loadConfig(context.Background())
+	if err != nil {
+		t.Fatalf("Unablet to load config: %v", err)
+	}
+
+	if len(mdb.GetMachines()) != 2 {
+		t.Errorf("Machine was cleaned")
+	}
+
+}

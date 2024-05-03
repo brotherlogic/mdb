@@ -51,6 +51,8 @@ message Machine {
     // These are the user specified eleemnts
     MachineType type = 5;
     MachineUse use = 6;
+
+    bool marked_for_delete = 7;
 }
 
 message ListMachinesRequest {
