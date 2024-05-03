@@ -124,33 +124,6 @@ func cleanConfig(config *pb.Mdb) {
 		}
 	}
 	config.Machines = vm
-
-	// Map out ips to machines
-	ipMap := make(map[uint32][]*pb.Machine)
-	for _, machine := range config.GetMachines() {
-		if _, ok := ipMap[(machine.GetIpv4())]; !ok {
-			ipMap[machine.GetIpv4()] = make([]*pb.Machine, 0)
-		}
-		ipMap[machine.GetIpv4()] = append(ipMap[machine.GetIpv4()], machine)
-	}
-
-	var nmachines []*pb.Machine
-	for _, machines := range ipMap {
-		if len(machines) == 2 {
-			if machines[0].Hostname == machines[1].Hostname {
-				if machines[0].GetMac() != "" {
-					nmachines = append(nmachines, machines[0])
-				} else if machines[1].GetMac() != "" {
-					nmachines = append(nmachines, machines[1])
-				} else {
-					nmachines = append(nmachines, machines...)
-				}
-			}
-		} else {
-			nmachines = append(nmachines, machines...)
-		}
-	}
-	config.Machines = nmachines
 }
 
 func (s *Server) loadConfig(ctx context.Context) (*pb.Mdb, error) {
