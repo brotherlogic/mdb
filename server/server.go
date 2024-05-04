@@ -401,7 +401,19 @@ func (s *Server) UpdateMachine(ctx context.Context, req *pb.UpdateMachineRequest
 		return nil, err
 	}
 
+	if req.GetIpv4() > 0 && req.GetRemove() {
+		var machines []*pb.Machine
+		for _, machine := range config.GetMachines() {
+			if machine.GetIpv4() != req.GetIpv4() {
+				machines = append(machines, machine)
+			}
+		}
+		config.Machines = machines
+		return &pb.UpdateMachineResponse{}, s.saveConfig(ctx, config)
+	}
+
 	for _, machine := range config.GetMachines() {
+
 		if machine.GetHostname() == req.GetHostname() {
 			updated := false
 			if req.GetNewType() != pb.MachineType_MACHINE_TYPE_UNKNOWN {
