@@ -42,6 +42,12 @@ message Mdb {
     Config config = 2;
 }
 
+enum MachineConnectivity {
+    MACHINE_CONNECTIVITY_UNKNOWN = 0;
+    MACHINE_CONNECTIVITY_WIRED = 1;
+    MACHINE_CONNECTIVITY_EPHEMERAL = 2;
+}
+
 message Machine {
     fixed32 ipv4 = 1;
     string hostname = 2;
@@ -51,6 +57,9 @@ message Machine {
     // These are the user specified eleemnts
     MachineType type = 5;
     MachineUse use = 6;
+    MachineConnectivity connectivity = 8;
+
+    bool marked_for_delete = 7;
 }
 
 message ListMachinesRequest {

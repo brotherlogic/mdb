@@ -47,7 +47,9 @@ func mergeInto(machines []*pb.Machine, machine *pb.Machine) []*pb.Machine {
 	for _, exMachine := range machines {
 		if exMachine.Controller == machine.Controller && exMachine.Hostname == machine.Hostname {
 			exMachine.Ipv4 = machine.Ipv4
-			exMachine.Mac = machine.Mac
+			if machine.Mac != "" && exMachine.Mac == "" {
+				exMachine.Mac = machine.Mac
+			}
 			return machines
 		}
 	}
