@@ -74,6 +74,9 @@ message UpdateMachineRequest {
     string hostname = 1;
 
     MachineType new_type = 2;
+
+    fixed32 ipv4 = 3;
+    bool remove = 4;
 }
 
 message UpdateMachineResponse {
