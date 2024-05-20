@@ -60,6 +60,9 @@ message Machine {
     MachineConnectivity connectivity = 8;
 
     bool marked_for_delete = 7;
+
+    string version = 9;
+    int64 last_updated = 10;
 }
 
 message ListMachinesRequest {
