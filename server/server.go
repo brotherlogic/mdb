@@ -345,6 +345,8 @@ func (s *Server) checkIssue(ctx context.Context, mdb *pb.Mdb) error {
 			mdb.GetConfig().GetCurrentMachine().Use = pb.MachineUse_MACHINE_USE_LOCAL_CLUSTER
 		case "windows":
 			mdb.GetConfig().GetCurrentMachine().Use = pb.MachineUse_MACHINE_USE_NOT_IN_USE
+		case "pi-server":
+			mdb.GetConfig().GetCurrentMachine().Use = pb.MachineUse_MACHINE_USE_PI_SERVER
 		case "fixed":
 			// Clear all instances of this entity and re-create the db
 			var nm []*pb.Machine

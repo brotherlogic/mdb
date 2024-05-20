@@ -28,6 +28,7 @@ enum MachineUse {
     MACHINE_USE_KUBERNETES_CLUSTER = 3;
     MACHINE_USE_LOCAL_CLUSTER = 4;
     MACHINE_USE_NOT_IN_USE = 5;
+    MACHINE_USE_PI_SERVER = 6;
 }
 
 enum MachineErrors {
