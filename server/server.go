@@ -144,6 +144,8 @@ func cleanConfig(config *pb.Mdb) {
 	for _, machine := range config.GetMachines() {
 		if !machine.GetMarkedForDelete() {
 			nm = append(nm, machine)
+		} else {
+			log.Printf("Deleting %v", machine)
 		}
 	}
 	config.Machines = nm
