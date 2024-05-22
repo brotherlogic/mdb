@@ -45,7 +45,7 @@ func getMacAddress(addr string) (string, string) {
 
 func mergeInto(machines []*pb.Machine, machine *pb.Machine) []*pb.Machine {
 	for _, exMachine := range machines {
-		if exMachine.Controller == machine.Controller && exMachine.Hostname == machine.Hostname {
+		if exMachine.Hostname == machine.Hostname {
 			exMachine.Ipv4 = machine.Ipv4
 			if machine.Mac != "" && exMachine.Mac == "" {
 				exMachine.Mac = machine.Mac

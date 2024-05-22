@@ -21,6 +21,10 @@ func ipv4ToString(ipv4 uint32) string {
 	return ip.String()
 }
 
+func strToIpv4(ipv4 string) uint32 {
+	return binary.BigEndian.Uint32(net.ParseIP(ipv4)[12:16])
+}
+
 func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*60)
 	defer cancel()
@@ -32,12 +36,20 @@ func main() {
 
 	client := pb.NewMDBServiceClient(conn)
 
+	if os.Args[2] == "delete" {
+		resp, err := client.UpdateMachine(ctx, &pb.UpdateMachineRequest{Ipv4: strToIpv4(os.Args[3]), Remove: true})
+		if err != nil {
+			log.Printf("Delete: %v -> %v", resp, err)
+		}
+		return
+	}
+
 	resp, err := client.ListMachines(ctx, &pb.ListMachinesRequest{})
 	if err != nil {
 		log.Fatalf("Unable to drain queue: %v", err)
 	}
 
 	for _, machine := range resp.GetMachines() {
-				fmt.Printf("%v %v\n", ipv4ToString(machine.GetIpv4()), machine)
+		fmt.Printf("%v %v\n", ipv4ToString(machine.GetIpv4()), machine)
 	}
 }
