@@ -81,6 +81,9 @@ message UpdateMachineRequest {
 
     fixed32 ipv4 = 3;
     bool remove = 4;
+
+    bool mark_update = 5;
+    string version = 6;
 }
 
 message UpdateMachineResponse {

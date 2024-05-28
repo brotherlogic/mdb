@@ -448,6 +448,16 @@ func (s *Server) UpdateMachine(ctx context.Context, req *pb.UpdateMachineRequest
 				updated = true
 			}
 
+			if req.GetMarkUpdate() {
+				machine.LastUpdated = time.Now().UnixNano()
+				updated = true
+			}
+
+			if req.GetVersion() != "" {
+				machine.Version = req.GetVersion()
+				updated = true
+			}
+
 			if updated {
 				return &pb.UpdateMachineResponse{}, s.saveConfig(ctx, config)
 			}
