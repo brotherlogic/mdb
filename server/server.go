@@ -479,6 +479,10 @@ func (s *Server) UpdateMachine(ctx context.Context, req *pb.UpdateMachineRequest
 				updated = true
 			}
 
+			if req.GetNewK3SVersion() != "" {
+				machine.K3SVersion = req.GetNewK3SVersion()
+			}
+
 			if updated {
 				return &pb.UpdateMachineResponse{}, s.saveConfig(ctx, config)
 			}
