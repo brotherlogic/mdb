@@ -21,6 +21,12 @@ enum MachineType {
     MACHINE_TYPE_AMD = 7;
 }
 
+enum ClusterType {
+    CLUSTER_TYPE_UNKNONW = 0;
+    CLUSTER_TYPE_LEAD = 1;
+    CLUSTER_TYPE_FOLLOWER = 2;
+}
+
 enum MachineUse {
     MACHINE_USE_UNKNOWN = 0;
     MACHINE_USE_DEV_DESKTOP = 1;
@@ -36,6 +42,7 @@ enum MachineErrors {
     MACHINE_ERROR_MISSING_TYPE = 1;
     MACHINE_ERROR_UNSTABLE_IP = 2;
     MACHINE_ERROR_MISSING_USE = 3;
+    MACHINE_ERROR_CLUSTER_MISSING_TYPE = 4;
 }
 
 message Mdb {
@@ -59,6 +66,7 @@ message Machine {
     MachineType type = 5;
     MachineUse use = 6;
     MachineConnectivity connectivity = 8;
+    ClusterType cluster_type = 11;
 
     bool marked_for_delete = 7;
 

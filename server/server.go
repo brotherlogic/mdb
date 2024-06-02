@@ -212,6 +212,8 @@ func (s *Server) raiseIssue(ctx context.Context, mdb *pb.Mdb, machine *pb.Machin
 		body = fmt.Sprintf("%v (%v) is missing the machine use", machine.GetHostname(), machine.GetType())
 	case pb.MachineErrors_MACHINE_ERROR_UNSTABLE_IP:
 		body = fmt.Sprintf("%v has recorded mulitple IPs (e.g. %v)", machine.GetHostname(), ipv4ToString(machine.GetIpv4()))
+	case pb.MachineErrors_MACHINE_ERROR_CLUSTER_MISSING_TYPE:
+		body = fmt.Sprintf("%v is missing the cluster type", machine.GetHostname())
 	case pb.MachineErrors_MACHINE_ERROR_NONE:
 		return status.Errorf(codes.Internal, "Trying to raise issue for unbroken machine")
 	}
@@ -253,6 +255,12 @@ func (s *Server) dataMissing(ctx context.Context, machine *pb.Machine) pb.Machin
 		machine.GetType() == pb.MachineType_MACHINE_TYPE_AMD {
 		if machine.GetUse() == pb.MachineUse_MACHINE_USE_UNKNOWN {
 			return pb.MachineErrors_MACHINE_ERROR_MISSING_USE
+		}
+	}
+
+	if machine.GetUse() == pb.MachineUse_MACHINE_USE_KUBERNETES_CLUSTER {
+		if machine.GetClusterType() == pb.ClusterType_CLUSTER_TYPE_UNKNONW {
+			return pb.MachineErrors_MACHINE_ERROR_CLUSTER_MISSING_TYPE
 		}
 	}
 
@@ -349,6 +357,10 @@ func (s *Server) checkIssue(ctx context.Context, mdb *pb.Mdb) error {
 			mdb.GetConfig().GetCurrentMachine().Use = pb.MachineUse_MACHINE_USE_NOT_IN_USE
 		case "pi-server":
 			mdb.GetConfig().GetCurrentMachine().Use = pb.MachineUse_MACHINE_USE_PI_SERVER
+		case "lead":
+			mdb.GetConfig().GetCurrentMachine().ClusterType = pb.ClusterType_CLUSTER_TYPE_LEAD
+		case "follow":
+			mdb.GetConfig().GetCurrentMachine().ClusterType = pb.ClusterType_CLUSTER_TYPE_FOLLOWER
 		case "fixed":
 			// Clear all instances of this entity and re-create the db
 			var nm []*pb.Machine
@@ -385,8 +397,13 @@ func (s *Server) resolveMachine(ctx context.Context, mdb *pb.Mdb) error {
 				machine.Use = mdb.GetConfig().GetCurrentMachine().GetUse()
 			}
 
+			if machine.GetClusterType() == pb.ClusterType_CLUSTER_TYPE_UNKNONW && mdb.GetConfig().GetCurrentMachine().GetClusterType() != pb.ClusterType_CLUSTER_TYPE_UNKNONW {
+				machine.ClusterType = mdb.Config.CurrentMachine.GetClusterType()
+			}
+
 			if (mdb.GetConfig().GetIssueType() == pb.MachineErrors_MACHINE_ERROR_MISSING_TYPE && machine.GetType() != pb.MachineType_MACHINE_TYPE_UNKNOWN) ||
-				(mdb.GetConfig().GetIssueType() == pb.MachineErrors_MACHINE_ERROR_MISSING_USE && machine.GetUse() != pb.MachineUse_MACHINE_USE_UNKNOWN) {
+				(mdb.GetConfig().GetIssueType() == pb.MachineErrors_MACHINE_ERROR_MISSING_USE && machine.GetUse() != pb.MachineUse_MACHINE_USE_UNKNOWN) ||
+				(mdb.GetConfig().GetIssueType() == pb.MachineErrors_MACHINE_ERROR_CLUSTER_MISSING_TYPE && machine.GetClusterType() != pb.ClusterType_CLUSTER_TYPE_UNKNONW) {
 				_, err := s.ghbclient.CloseIssue(ctx, &ghbpb.CloseIssueRequest{
 					User: "brotherlogic",
 					Repo: "mdb",
@@ -450,6 +467,16 @@ func (s *Server) UpdateMachine(ctx context.Context, req *pb.UpdateMachineRequest
 			if req.GetNewUse() != pb.MachineUse_MACHINE_USE_UNKNOWN {
 				machine.Use = req.GetNewUse()
 				update = true
+			}
+
+			if req.GetMarkUpdate() {
+				machine.LastUpdated = time.Now().UnixNano()
+				updated = true
+			}
+
+			if req.GetVersion() != "" {
+				machine.Version = req.GetVersion()
+				updated = true
 			}
 
 			if updated {
