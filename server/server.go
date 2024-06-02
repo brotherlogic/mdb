@@ -466,16 +466,16 @@ func (s *Server) UpdateMachine(ctx context.Context, req *pb.UpdateMachineRequest
 			}
 			if req.GetNewUse() != pb.MachineUse_MACHINE_USE_UNKNOWN {
 				machine.Use = req.GetNewUse()
-				update = true
+				updated = true
 			}
 
-			if req.GetMarkUpdate() {
+			if req.GetUpdate() {
 				machine.LastUpdated = time.Now().UnixNano()
 				updated = true
 			}
 
-			if req.GetVersion() != "" {
-				machine.Version = req.GetVersion()
+			if req.GetNewVersion() != "" {
+				machine.Version = req.GetNewVersion()
 				updated = true
 			}
 
