@@ -72,6 +72,8 @@ message Machine {
 
     string version = 9;
     int64 last_updated = 10;
+
+    string k3s_version = 12;
 }
 
 message ListMachinesRequest {
@@ -93,6 +95,8 @@ message UpdateMachineRequest {
 
     bool update = 5;
     string new_version = 6;
+
+    string new_k3s_version = 8;
 }
 
 message UpdateMachineResponse {
