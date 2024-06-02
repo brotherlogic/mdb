@@ -447,6 +447,10 @@ func (s *Server) UpdateMachine(ctx context.Context, req *pb.UpdateMachineRequest
 				machine.Type = req.GetNewType()
 				updated = true
 			}
+			if req.GetNewUse() != pb.MachineUse_MACHINE_USE_UNKNOWN {
+				machine.Use = req.GetNewUse()
+				update = true
+			}
 
 			if updated {
 				return &pb.UpdateMachineResponse{}, s.saveConfig(ctx, config)

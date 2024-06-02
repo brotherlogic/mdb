@@ -42,6 +42,12 @@ func main() {
 			log.Printf("Delete: %v -> %v", resp, err)
 		}
 		return
+	} else if os.Args[2] == "set_home_cluster" {
+		_, err := client.UpdateMachine(ctx, &pb.UpdateMachineRequest{Ipv4: strToIpv4(os.Args[3]), NewUse: pb.MachineUse_MACHINE_USE_LOCAL_CLUSTER})
+		if err != nil {
+			log.Print("Home: %v", err)
+			return
+		}
 	}
 
 	resp, err := client.ListMachines(ctx, &pb.ListMachinesRequest{})
