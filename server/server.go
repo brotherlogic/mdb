@@ -319,6 +319,22 @@ func (s *Server) validateMachines(ctx context.Context, mdb *pb.Mdb) error {
 }
 
 func (s *Server) checkIssue(ctx context.Context, mdb *pb.Mdb) error {
+	// Check that the issue is still open
+	issue, err := s.ghbclient.GetIssue(ctx, &ghbpb.GetIssueRequest{
+		User: "brotherlogic",
+		Repo: "mdb",
+		Id:   mdb.GetConfig().GetIssueId(),
+	})
+	if err != nil {
+		return err
+	}
+	if issue.GetState() == "closed" {
+		mdb.GetConfig().IssueId = 0
+		return s.saveConfig(ctx, mdb)
+	}
+
+	log.Printf("Carrying on because %v", issue.GetState())
+
 	labels, err := s.ghbclient.GetLabels(ctx, &ghbpb.GetLabelsRequest{
 		User: "brotherlogic",
 		Repo: "mdb",
