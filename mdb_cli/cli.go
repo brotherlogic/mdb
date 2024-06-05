@@ -48,7 +48,12 @@ func main() {
 			log.Printf("Home bad: %v", err)
 		}
 		return
-	}
+	}else if os.Args[2] == "update_cluster_version" {
+		_, err := client.UpdateMachine(ctx, &pb.UpdateMachineRequest{Ipv4: strToIpv4(os.Args[3]), NewK3SVersion: os.Args[3]})
+		if err != nil {
+			log.Printf("Bad version update: %v", err)
+		}
+		return
 
 	resp, err := client.ListMachines(ctx, &pb.ListMachinesRequest{})
 	if err != nil {
