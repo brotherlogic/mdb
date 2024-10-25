@@ -6,7 +6,7 @@ import (
 
 	ghbclient "github.com/brotherlogic/githubridge/client"
 	ghbpb "github.com/brotherlogic/githubridge/proto"
-	rsclient "github.com/brotherlogic/rstore/client"
+	rsclient "github.com/brotherlogic/pstore/client"
 
 	pb "github.com/brotherlogic/mdb/proto"
 )
@@ -15,7 +15,7 @@ func GetTestServer(machines []*pb.Machine) (*Server, ghbclient.GithubridgeClient
 	ghc := ghbclient.GetTestClient()
 	s := &Server{
 		ghbclient: ghc,
-		rsclient:  rsclient.GetTestClient(),
+		psclient:  rsclient.GetTestClient(),
 	}
 
 	err := s.saveConfig(context.Background(), &pb.Mdb{Machines: machines})
