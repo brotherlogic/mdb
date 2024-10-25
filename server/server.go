@@ -18,11 +18,11 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 
 	ghbclient "github.com/brotherlogic/githubridge/client"
-	rsclient "github.com/brotherlogic/rstore/client"
+	psclient "github.com/brotherlogic/pstore/client"
 
 	ghbpb "github.com/brotherlogic/githubridge/proto"
 	pb "github.com/brotherlogic/mdb/proto"
-	rspb "github.com/brotherlogic/rstore/proto"
+	pspb "github.com/brotherlogic/pstore/proto"
 )
 
 const (
@@ -56,7 +56,7 @@ func metrics(config *pb.Mdb) {
 
 type Server struct {
 	ghbclient ghbclient.GithubridgeClient
-	rsclient  rsclient.RStoreClient
+	psclient  psclient.PStoreClient
 	running   bool
 }
 
@@ -65,11 +65,11 @@ func NewServer(ctx context.Context) *Server {
 	if err != nil {
 		log.Fatalf("Bad client get: %v", err)
 	}
-	rsclient, err := rsclient.GetClient()
+	psclient, err := psclient.GetClient()
 	if err != nil {
 		log.Fatalf("Unable to get rstore client: %v", err)
 	}
-	return &Server{ghbclient: ghbclient, rsclient: rsclient, running: true}
+	return &Server{ghbclient: ghbclient, psclient: psclient, running: true}
 }
 
 func (s *Server) RunRefillLoop() {
@@ -152,7 +152,7 @@ func cleanConfig(config *pb.Mdb) {
 }
 
 func (s *Server) loadConfig(ctx context.Context) (*pb.Mdb, error) {
-	data, err := s.rsclient.Read(ctx, &rspb.ReadRequest{
+	data, err := s.psclient.Read(ctx, &pspb.ReadRequest{
 		Key: MDB_PATH,
 	})
 	if err != nil {
@@ -173,7 +173,7 @@ func (s *Server) saveConfig(ctx context.Context, mdb *pb.Mdb) error {
 	if err != nil {
 		return err
 	}
-	_, err = s.rsclient.Write(ctx, &rspb.WriteRequest{
+	_, err = s.psclient.Write(ctx, &pspb.WriteRequest{
 		Key:   MDB_PATH,
 		Value: &anypb.Any{Value: data},
 	})
