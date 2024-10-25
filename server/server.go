@@ -67,7 +67,7 @@ func NewServer(ctx context.Context) *Server {
 	}
 	psclient, err := psclient.GetClient()
 	if err != nil {
-		log.Fatalf("Unable to get rstore client: %v", err)
+		log.Fatalf("Unable to get pstore client: %v", err)
 	}
 	return &Server{ghbclient: ghbclient, psclient: psclient, running: true}
 }
