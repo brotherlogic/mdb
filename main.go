@@ -37,7 +37,7 @@ func main() {
 	http.Handle("/metrics", promhttp.Handler())
 	go func() {
 		err := http.ListenAndServe(fmt.Sprintf(":%v", *metricsPort), nil)
-		log.Fatalf("mdb is unable to serve metrics: %v", err)
+		log.Fatalf("mdb is unable to serve metric on the ports: %v", err)
 	}()
 
 	// Background run the refill loop
