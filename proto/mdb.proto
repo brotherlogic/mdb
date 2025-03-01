@@ -103,7 +103,16 @@ message UpdateMachineResponse {
 
 }
 
+message GetMachineRequest {
+    string hostname = 1;
+}
+
+message GetMachineResponse {
+    Machine details = 1;
+}
+
 service MDBService {
     rpc ListMachines(ListMachinesRequest) returns (ListMachinesResponse) {};
     rpc UpdateMachine(UpdateMachineRequest) returns (UpdateMachineResponse) {};
+    rpc GetMachine(GetMachineRequest) returns (GetMachineResponse) {};
 }
