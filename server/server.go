@@ -509,3 +509,20 @@ func (s *Server) UpdateMachine(ctx context.Context, req *pb.UpdateMachineRequest
 
 	return nil, status.Errorf(codes.NotFound, "machine %v was not found", req.GetHostname())
 }
+
+func (s *Server) GetMachine(ctx context.Context, req *pb.GetMachineRequest) (*pb.GetMachineResponse, error) {
+	config, err := s.loadConfig(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, c := range config.GetMachines() {
+		if c.GetHostname() == req.GetHostname() {
+			return &pb.GetMachineResponse{
+				Details: c,
+			}, nil
+		}
+	}
+
+	return nil, status.Errorf(codes.NotFound, "Unable to locate machine with name %v", req.GetHostname())
+}

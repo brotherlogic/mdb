@@ -45,6 +45,13 @@ enum MachineErrors {
     MACHINE_ERROR_CLUSTER_MISSING_TYPE = 4;
 }
 
+enum MachineStability {
+    MACHINE_STABILITY_UNKNOWN = 0;
+    MACHINE_STABILITY_STAY_UP = 1;
+    MACHINE_STABILITY_SHUTDOWN_ON_LEAVE = 2;
+    MACHINE_STABILITY_SHUTDOWN_ON_OFFICE_DOWN = 3;
+}
+
 message Mdb {
     repeated Machine machines = 1;
     Config config = 2;
@@ -74,6 +81,8 @@ message Machine {
     int64 last_updated = 10;
 
     string k3s_version = 12;
+
+    MachineStability stability = 13;
 }
 
 message ListMachinesRequest {
@@ -103,7 +112,16 @@ message UpdateMachineResponse {
 
 }
 
+message GetMachineRequest {
+    string hostname = 1;
+}
+
+message GetMachineResponse {
+    Machine details = 1;
+}
+
 service MDBService {
     rpc ListMachines(ListMachinesRequest) returns (ListMachinesResponse) {};
     rpc UpdateMachine(UpdateMachineRequest) returns (UpdateMachineResponse) {};
+    rpc GetMachine(GetMachineRequest) returns (GetMachineResponse) {};
 }
