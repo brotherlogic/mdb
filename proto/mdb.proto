@@ -106,6 +106,8 @@ message UpdateMachineRequest {
     string new_version = 6;
 
     string new_k3s_version = 8;
+
+    MachineStability new_stability = 9;
 }
 
 message UpdateMachineResponse {
