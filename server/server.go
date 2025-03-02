@@ -499,6 +499,11 @@ func (s *Server) UpdateMachine(ctx context.Context, req *pb.UpdateMachineRequest
 				machine.K3SVersion = req.GetNewK3SVersion()
 			}
 
+			if req.GetNewStability() != pb.MachineStability_MACHINE_STABILITY_UNKNOWN {
+				machine.Stability = req.GetNewStability()
+				updated = true
+			}
+
 			if updated {
 				return &pb.UpdateMachineResponse{}, s.saveConfig(ctx, config)
 			}
