@@ -522,7 +522,7 @@ func (s *Server) GetMachine(ctx context.Context, req *pb.GetMachineRequest) (*pb
 	}
 
 	for _, c := range config.GetMachines() {
-		if c.GetHostname() == req.GetHostname() {
+		if strings.HasPrefix(c.GetHostname(), req.GetHostname()) {
 			return &pb.GetMachineResponse{
 				Details: c,
 			}, nil

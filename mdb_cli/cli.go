@@ -54,6 +54,11 @@ func main() {
 			log.Printf("Bad version update: %v", err)
 		}
 		return
+	} else if os.Args[2] == "update_shutdown" {
+		_, err := client.UpdateMachine(ctx, &pb.UpdateMachineRequest{Hostname: os.Args[3], NewStability: pb.MachineStability_MACHINE_STABILITY_SHUTDOWN_ON_LEAVE})
+		if err != nil {
+			log.Fatalf("Error: %v", err)
+		}
 	}
 
 	resp, err := client.ListMachines(ctx, &pb.ListMachinesRequest{})
